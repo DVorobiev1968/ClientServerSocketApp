@@ -22,14 +22,27 @@ public class Client {
 		debug=PLCGlobals.debug;
 	}
 	/*
+	 	метод для завершения сеанса
+	 */
+	public void exit_session() throws IOException {
+		send_command(msgToSend.cl.CODE_EXIT);
+	}
+	/*
 	 	метод для вывода содержимого хранилища применяется для отладки
 	 */
-	public int list_nodes() throws IOException {
-		int i_status=this.msgToSend.cl.OK;
+	public void list_nodes() throws IOException {
+		send_command(msgToSend.cl.CODE_LIST_NODES);
+	}
+
+	/*
+	 	метод для отправки команды на сервер
+	 */
+	public int send_command(int code_command) throws IOException {
+		int i_status;
 		i_status=this.open_connect();		// инициируем объекты и устанавливаем связ с хостом
 		if (i_status!=this.msgToSend.cl.OK)
 			return i_status;
-		msgToSend.setI_codeCommand(msgToSend.cl.CODE_LIST_NODES);
+		msgToSend.setI_codeCommand(code_command);
 		msgToSend.setS_message();	// сфоруем телеграмму на посылку данных
 		i_status=this.sync_mode();	// используем синхронную передачу данных
 		if (i_status==msgToSend.cl.OK ||
@@ -238,8 +251,9 @@ public class Client {
 	public static void main(String[] args) throws IOException {
 		Client client = new Client();
 //		client.run();
-		client.init_node();
-		client.list_nodes();
+//		client.init_node();
+//		client.list_nodes();
+		client.exit_session();
 		client.close_connect();
 	}
 }
