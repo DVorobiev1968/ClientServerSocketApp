@@ -1,5 +1,6 @@
 package ru.DVorobiev;
 
+import java.util.Optional;
 import java.util.Random;
 
 public class NodeMessage {
@@ -14,7 +15,7 @@ public class NodeMessage {
     private int h_idObj;		// идентификатор объекта
     private int h_idSubObj;		// идентификатор субобъекта
     private int i_typeData;		// тип данных объекта
-    public double d_value;		// возвращаемое значение
+    public float d_value;		// возвращаемое значение
     private int i_check;		// контрольная сумма
 
     final static int MAX_NODE=10;           // для отладки максимальное кол-во узлов
@@ -106,7 +107,7 @@ public class NodeMessage {
         this.d_value = random.nextFloat();
     }
 
-    public void setD_value(double d_value) {
+    public void setD_value(float d_value) {
         this.d_value = d_value;
     }
 
@@ -150,9 +151,23 @@ public class NodeMessage {
         this.i_typeData = i_typeData;
     }
 
-    public String getInfo(){
+    /**
+     * получение информации об узле со значением
+     * @return str: строка содержащую информацию об узле
+     */
+    public String getNodeInfo(){
         String str;
-        str=String.format("Node:%d;Code:%d;Value:%3.6f\n",i_idNode,i_code_answer,d_value);
+        str=String.format("Node information: \n" +
+                "\tID Node: %d\n" +
+                "\tID Object: %d\n"+
+                "\tCode command: %d (%s)\n"+
+                "\tCode answer : %d (%s)\n" +
+                "\td_value:%3.6f\n",
+                i_idNode,
+                h_idObj,
+                i_codeCommand,this.cl.errMessage(i_codeCommand),
+                i_code_answer,this.cl.errMessage(i_code_answer),
+                d_value);
         return str;
     }
     NodeMessage() {
@@ -165,8 +180,5 @@ public class NodeMessage {
         i_typeData=0;
         d_value=1;
         setS_message();
-    }
-    protected void finalize(){
-
     }
 }

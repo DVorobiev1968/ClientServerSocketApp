@@ -5,29 +5,35 @@ import java.util.*;
 public class Classif {
     private HashMap<Integer, String> states = new HashMap<Integer, String>();
     final public int OK=80;
+    // коды ошибок
+    final public int ERR_CLOSE_CONNECT=95;
+    final public int UNKNOW_HOST=96;
     final public int RESET_HOST=97;
     final public int B_MESSAGE_EMPTY=98;
     final public int ERR=99;
-    final public int CODE_START=1;
-    final public int CODE_STOP=2;
-    final public int CODE_LIST_NODES = 10;
-    final public int CODE_EXIT = 20;
-
     final public int SYNTAX_ERR=101;
     final public int ERR_FUNC=-1;
-    final public int UNKNOW_HOST =97;
+
+    // коды комманд
+    final public int CODE_START=1;
+    final public int CODE_STOP=2;
+    final public int CODE_SINGLE_START=3;
+    final public int CODE_LIST_NODES = 10;
+    final public int CODE_EXIT = 20;
+    final public int CODE_EXIT_SERVER = 21;
 
     Classif()
     {
-        states.put(1, "Start command");
-        states.put(2, "Stop command");
         states.put(OK,"Command completed completely");
         states.put(CODE_START, "Start command");
         states.put(CODE_STOP, "Stop command");
+        states.put(CODE_SINGLE_START, "Single start command");
         states.put(CODE_LIST_NODES, "Printing nodes list");
         states.put(CODE_EXIT, "Close connect Client stopped");
+        states.put(CODE_EXIT_SERVER, "Close connect Server stopped");
         states.put(UNKNOW_HOST,"UnknownHostException");
         states.put(RESET_HOST, "The program on your host computer dropped the established connection");
+        states.put(ERR_CLOSE_CONNECT, "Error close connection");
         states.put(B_MESSAGE_EMPTY, "b_message it`s empty or Thread is done");
         states.put(ERR_FUNC, "Error functions: ");
         states.put(ERR, "General error");
