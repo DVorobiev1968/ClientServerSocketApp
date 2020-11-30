@@ -48,7 +48,7 @@ public class Client {
 	 */
 	public void exit_server() throws IOException {
 		send_command(msgToSend.cl.CODE_EXIT_SERVER);
-		send_command(msgToSend.cl.CODE_EXIT_SERVER); // это костыль надо разобраться в причине, потом убрать
+//		send_command(msgToSend.cl.CODE_EXIT_SERVER); // это костыль надо разобраться в причине, потом убрать
 	}
 	/**
 	 * метод для завершения сеанса работы клиента
@@ -56,6 +56,21 @@ public class Client {
 	 */
 	public void exit_session() throws IOException {
 		send_command(msgToSend.cl.CODE_EXIT);
+	}
+
+	/**
+	 * метод для поиска информации по узлу
+	 * @param id_node : номер узла
+	 * @param id_obj : номер объекта
+	 * @throws IOException
+	 */
+	public int find_node_obj(int id_node, int id_obj) throws IOException {
+		int i_status;
+		msgToSend.setI_idNode(id_node);
+		msgToSend.setH_idObj(id_obj);
+		msgToSend.setS_message();			// сфоруем телеграмму на посылку данных
+		i_status=send_command(msgToSend.cl.CODE_FIND_NODES);
+		return i_status;
 	}
 
 	/**

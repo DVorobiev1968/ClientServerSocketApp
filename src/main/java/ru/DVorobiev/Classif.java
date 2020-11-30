@@ -6,6 +6,8 @@ public class Classif {
     private HashMap<Integer, String> states = new HashMap<Integer, String>();
     final public int OK=80;
     // коды ошибок
+    final public int SEARCH_FAIL = 78;
+    final public int SEARCH_OK = 79;
     final public int ERR_CLOSE_CONNECT=95;
     final public int UNKNOW_HOST=96;
     final public int RESET_HOST=97;
@@ -19,6 +21,7 @@ public class Classif {
     final public int CODE_STOP=2;
     final public int CODE_SINGLE_START=3;
     final public int CODE_LIST_NODES = 10;
+    final public int CODE_FIND_NODES=11;
     final public int CODE_EXIT = 20;
     final public int CODE_EXIT_SERVER = 21;
 
@@ -29,6 +32,7 @@ public class Classif {
         states.put(CODE_STOP, "Stop command");
         states.put(CODE_SINGLE_START, "Single start command");
         states.put(CODE_LIST_NODES, "Printing nodes list");
+        states.put(CODE_FIND_NODES, "Search nodes and objext");
         states.put(CODE_EXIT, "Close connect Client stopped");
         states.put(CODE_EXIT_SERVER, "Close connect Server stopped");
         states.put(UNKNOW_HOST,"UnknownHostException");
@@ -36,6 +40,8 @@ public class Classif {
         states.put(ERR_CLOSE_CONNECT, "Error close connection");
         states.put(B_MESSAGE_EMPTY, "b_message it`s empty or Thread is done");
         states.put(ERR_FUNC, "Error functions: ");
+        states.put(SEARCH_FAIL, "Node and object not found");
+        states.put(SEARCH_OK, "Node and object found OK");
         states.put(ERR, "General error");
         states.put(100, "Request not supported.");
         states.put(SYNTAX_ERR, "Syntax error.");
