@@ -66,9 +66,9 @@ public class Client {
 	 */
 	public int findNodeObj(int id_node, int id_obj) throws IOException {
 		int i_status;
-		msgToSend.setI_idNode(id_node);
-		msgToSend.setH_idObj(id_obj);
-		msgToSend.setS_message();			// сфоруем телеграмму на посылку данных
+		msgToSend.setIIdNode(id_node);
+		msgToSend.setHIdObj(id_obj);
+		msgToSend.setSMessage();			// сфоруем телеграмму на посылку данных
 		i_status= sendCommand(msgToSend.cl.CODE_FIND_NODES);
 		return i_status;
 	}
@@ -92,11 +92,11 @@ public class Client {
 	 */
 	public int sendNode(int id_node, int id_obj, float d_value) throws IOException {
 		int i_status;
-		msgToSend.setI_idNode(id_node);
-		msgToSend.setH_idObj(id_obj);
-		msgToSend.setD_value(d_value);
-		msgToSend.setI_typeData(2);
-		msgToSend.setS_message();			// сфоруем телеграмму на посылку данных
+		msgToSend.setIIdNode(id_node);
+		msgToSend.setHIdObj(id_obj);
+		msgToSend.setDValue(d_value);
+		msgToSend.setITypeData(2);
+		msgToSend.setSMessage();			// сфоруем телеграмму на посылку данных
 		i_status= sendCommand(msgToSend.cl.CODE_SINGLE_START);
 		return i_status;
 	}
@@ -115,8 +115,8 @@ public class Client {
 		i_status=this.openConnect();		// инициируем объекты и устанавливаем связ с хостом
 		if (i_status!=this.msgToSend.cl.OK)
 			return i_status;
-		msgToSend.setI_codeCommand(code_command);
-		msgToSend.setS_message();	// сфоруем телеграмму на посылку данных
+		msgToSend.setICodeCommand(code_command);
+		msgToSend.setSMessage();	// сфоруем телеграмму на посылку данных
 		if (code_command==msgToSend.cl.CODE_EXIT_SERVER)
 			i_status = this.asyncMode();    // используем асинхронную передачу данных
 		else
@@ -129,7 +129,7 @@ public class Client {
 			i_status=i_status;
 		}
 		else {
-			errMessage=msgToSend.getS_message();
+			errMessage=msgToSend.getSMessage();
 			printMessage(errMessage,PLCGlobals.INFO);
 		}
 		i_status=this.closeConnect();
@@ -155,19 +155,19 @@ public class Client {
 		}
 
 		for (int i = 1; i <= msgToSend.MAX_NODE; i++) {
-			msgToSend.setI_idNode(i);
-			msgToSend.setI_codeCommand(msgToSend.cl.CODE_START);
+			msgToSend.setIIdNode(i);
+			msgToSend.setICodeCommand(msgToSend.cl.CODE_START);
 			for (int j = 1; j <= msgToSend.MAX_NODE_OBJS; j++) {
-				msgToSend.setH_idObj(0x1000 + j);
-				msgToSend.setH_idSubObj(0x1);
-				msgToSend.setD_valueRandom();
-				msgToSend.setI_typeData(2);
+				msgToSend.setHIdObj(0x1000 + j);
+				msgToSend.setHIdSubObj(0x1);
+				msgToSend.setDValueRandom();
+				msgToSend.setITypeData(2);
 				// тест на прекращение обмена информацией
 				if (j > msgToSend.MAX_NODE_OBJS - 1 &&
 					i> msgToSend.MAX_NODE-1) {
-					msgToSend.setI_codeCommand(msgToSend.cl.CODE_EXIT);
+					msgToSend.setICodeCommand(msgToSend.cl.CODE_EXIT);
 				}
-				msgToSend.setS_message();	// сфоруем телеграмму на посылку данных
+				msgToSend.setSMessage();	// сфоруем телеграмму на посылку данных
 
 				i_status=this.syncMode();	// используем синхронную передачу данных
 				if (i_status==msgToSend.cl.OK ||
@@ -178,7 +178,7 @@ public class Client {
 					break;
 				}
 				else {
-					errMessage=msgToSend.getS_message();
+					errMessage=msgToSend.getSMessage();
 					printMessage(errMessage,PLCGlobals.INFO);
 				}
 
@@ -256,7 +256,7 @@ public class Client {
 		String line;
 		int i_status=this.msgToSend.cl.OK;
 		try {
-			this.toServer.println(msgToSend.getS_message());    // отправил в порт
+			this.toServer.println(msgToSend.getSMessage());    // отправил в порт
 			line = fromServer.readLine();                		// получим ответ
 			i_status = msgToSend.parser(line);            		// разберем строку по переменным NodeStructure
 			if (i_status == msgToSend.cl.ERR_FUNC) {        	// отработка ошибки
@@ -264,7 +264,7 @@ public class Client {
 				this.printMessage(errMessage, PLCGlobals.ERROR);
 				return i_status;
 			}
-			if (msgToSend.getI_code_answer() == msgToSend.cl.ERR) {
+			if (msgToSend.getICodeAnswer() == msgToSend.cl.ERR) {
 				i_status=msgToSend.cl.ERR;
 				errMessage = "Ошибка: " + msgToSend.cl.errMessage(i_status);
 				this.printMessage(errMessage, PLCGlobals.ERROR);
@@ -292,7 +292,7 @@ public class Client {
 	 */
 	public int asyncMode(){
 		int i_status=this.msgToSend.cl.OK;
-		this.toServer.println(msgToSend.getS_message());    // отправил в порт
+		this.toServer.println(msgToSend.getSMessage());    // отправил в порт
 		return i_status;
 	}
 
@@ -327,20 +327,20 @@ public class Client {
 			this.fromServer =	new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 			for (int i=1; i<=msgToSend.MAX_NODE; i++){
-				msgToSend.setI_idNode(i);
-				msgToSend.setI_codeCommand(msgToSend.cl.CODE_START);
+				msgToSend.setIIdNode(i);
+				msgToSend.setICodeCommand(msgToSend.cl.CODE_START);
 				for (int j=1; j<=msgToSend.MAX_NODE_OBJS;j++){
-					msgToSend.setH_idObj(0x1000+j);
-					msgToSend.setH_idSubObj(0x1);
-					msgToSend.setD_valueRandom();
-					msgToSend.setI_typeData(2);
+					msgToSend.setHIdObj(0x1000+j);
+					msgToSend.setHIdSubObj(0x1);
+					msgToSend.setDValueRandom();
+					msgToSend.setITypeData(2);
 					// тест на прекращение обмена информацией
 					if (j > msgToSend.MAX_NODE_OBJS-1){
-						msgToSend.setI_codeCommand(msgToSend.cl.CODE_STOP);
+						msgToSend.setICodeCommand(msgToSend.cl.CODE_STOP);
 					}
-					msgToSend.setS_message();					// сфоруем телеграмму на посылку данных
+					msgToSend.setSMessage();					// сфоруем телеграмму на посылку данных
 
-					toServer.println(msgToSend.getS_message());	// отправил в порт
+					toServer.println(msgToSend.getSMessage());	// отправил в порт
 					line = fromServer.readLine();				// получим ответ
 					i_status=msgToSend.parser(line);			// разберем строку по переменным NodeStructure
 					if (i_status==msgToSend.cl.ERR_FUNC){		// отработка ошибки
@@ -349,7 +349,7 @@ public class Client {
 					}
 					System.out.println(line);
 					// тест на выдачу отшибки ри сервера
-					if (msgToSend.getI_code_answer()==msgToSend.cl.ERR){
+					if (msgToSend.getICodeAnswer()==msgToSend.cl.ERR){
 						System.out.println("Ошибка: " + msgToSend.cl.errMessage(msgToSend.cl.ERR));
 						break;
 					}
