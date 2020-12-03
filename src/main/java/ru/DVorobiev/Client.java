@@ -44,7 +44,6 @@ public class Client {
 
 	/**
 	 * метод для завершения работы сервера
-	 * @throws IOException:
 	 */
 	public void exitServer() throws IOException {
 		sendCommand(msgToSend.cl.CODE_EXIT_SERVER);
@@ -52,7 +51,6 @@ public class Client {
 	}
 	/**
 	 * метод для завершения сеанса работы клиента
-	 * @throws IOException:
 	 */
 	public void exitSession() throws IOException {
 		sendCommand(msgToSend.cl.CODE_EXIT);
@@ -62,7 +60,7 @@ public class Client {
 	 * метод для поиска информации по узлу
 	 * @param id_node : номер узла
 	 * @param id_obj : номер объекта
-	 * @throws IOException
+	 * @return i_status: код ошибки
 	 */
 	public int findNodeObj(int id_node, int id_obj) throws IOException {
 		int i_status;
@@ -76,7 +74,6 @@ public class Client {
 	/**
 	 * метод для вывода содержимого хранилища применяется для отладки
 	 * содержимое хранилища выводится на сервере
-	 * @throws IOException:
 	 */
 	public void listNodes() throws IOException {
 		sendCommand(msgToSend.cl.CODE_LIST_NODES);
@@ -87,15 +84,14 @@ public class Client {
 	 * @param id_node : номер узла
 	 * @param id_obj : номер объекта в узле
 	 * @param d_value : значение
-	 * @return i_status:
-	 * @throws IOException:
+	 * @return i_status: код ошибки
 	 */
-	public int sendNode(int id_node, int id_obj, float d_value) throws IOException {
+	public int sendNode(int id_node, int id_obj, double d_value) throws IOException {
 		int i_status;
 		msgToSend.setIIdNode(id_node);
 		msgToSend.setHIdObj(id_obj);
 		msgToSend.setDValue(d_value);
-		msgToSend.setITypeData(2);
+		msgToSend.setITypeData(3);
 		msgToSend.setSMessage();			// сфоруем телеграмму на посылку данных
 		i_status= sendCommand(msgToSend.cl.CODE_SINGLE_START);
 		return i_status;
@@ -108,7 +104,6 @@ public class Client {
 	 * 4. получает ответ, формирует код ошибки
 	 * @param code_command: код команды (описание Classif.java)
 	 * @return i_status: код ошибки
-	 * @throws IOException:
 	 */
 	public int sendCommand(int code_command) throws IOException {
 		int i_status;
@@ -138,33 +133,39 @@ public class Client {
 
 	/**
 	 * метод для инициализауии узлов применяется для отладки
-	 * имитирует создание 10 узлов по 10 объектов в каждом, после
+	 * имитирует создание n_Node узлов по n_Obj объектов в каждом, после
 	 * того как узлы будут сформированы посылает на сервер CODE_EXIT
 	 * и завершает работу клиента методы:
 	 * client.exitSession(), client.closeConnect(); по завершению
 	 * использовать не нужно
+	 * @param n_Node: кол-во создаваемых узлов
+	 * @param n_Obj: кол-во создаваемых объектов в узле
 	 * @return i_status: код ошибки
 	 * @throws IOException:
 	 */
-	public int initNode() throws IOException {
+	public int initNode(int n_Node,int n_Obj) throws IOException {
 		int i_status=this.msgToSend.cl.OK;
+		if (n_Node<1)
+			n_Node=msgToSend.MAX_NODE;
+		if (n_Obj<1)
+			n_Obj=msgToSend.MAX_NODE_OBJS;
 		i_status=this.openConnect();		// инициируем объекты и устанавливаем связ с хостом
 		if (i_status!=this.msgToSend.cl.OK){
 			i_status=this.closeConnect();
 			return i_status;
 		}
 
-		for (int i = 1; i <= msgToSend.MAX_NODE; i++) {
+		for (int i = 1; i <= n_Node; i++) {
 			msgToSend.setIIdNode(i);
 			msgToSend.setICodeCommand(msgToSend.cl.CODE_START);
-			for (int j = 1; j <= msgToSend.MAX_NODE_OBJS; j++) {
+			for (int j = 1; j <= n_Obj; j++) {
 				msgToSend.setHIdObj(0x1000 + j);
 				msgToSend.setHIdSubObj(0x1);
 				msgToSend.setDValueRandom();
-				msgToSend.setITypeData(2);
+				msgToSend.setITypeData(3);
 				// тест на прекращение обмена информацией
-				if (j > msgToSend.MAX_NODE_OBJS - 1 &&
-					i> msgToSend.MAX_NODE-1) {
+				if (j > n_Obj - 1 &&
+					i> n_Node-1) {
 					msgToSend.setICodeCommand(msgToSend.cl.CODE_EXIT);
 				}
 				msgToSend.setSMessage();	// сфоруем телеграмму на посылку данных
@@ -227,7 +228,6 @@ public class Client {
 	 * 	метод закрывает активные socket, объекты
 	 * 	для сетевого взаимодействия
 	 * @return i_status: код ошибки
-	 * @throws IOException:
 	 */
 	public int closeConnect() throws IOException {
 		int i_status=this.msgToSend.cl.OK;

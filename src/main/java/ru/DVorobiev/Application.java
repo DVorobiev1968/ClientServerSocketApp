@@ -10,12 +10,14 @@ public class Application
 {
     public static void main( String[] args ) throws IOException {
         Client client = new Client();
-        client.sendNode(11,0x1000, 100.000001f);
+        client.sendNode(11,0x1000, 100.00000001);
         System.out.print(client.msgToSend.getNodeInfo());
-		client.initNode();
-		client.findNodeObj(5,0x1000+7);
-		client.listNodes();
+		client.initNode(10,100);
+//        client.findNodeObj(5,0x1000+7);
+		client.findNodeObj(11,0x1000);
+        System.out.print(client.msgToSend.getNodeInfo());
+//		client.listNodes();
 		client.exitSession();
-        client.exitServer();
+//        client.exitServer();
     }
 }

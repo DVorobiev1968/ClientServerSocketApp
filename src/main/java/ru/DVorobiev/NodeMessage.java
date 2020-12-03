@@ -75,7 +75,7 @@ public class NodeMessage {
 
     public void setSMessage() {
         String str;
-        str=String.format("%d;%d;%d;%d;%d;%d;%f;",i_idNode,i_codeCommand,i_code_answer,h_idObj,h_idSubObj,i_typeData,d_value);
+        str=String.format("%d;%d;%d;%d;%d;%d;%4.10f;",i_idNode,i_codeCommand,i_code_answer,h_idObj,h_idSubObj,i_typeData,d_value);
         int i_len=str.length();
         String s_len=Integer.toString(i_len+4);	// учитываем служебные символы
         this.s_message = str+s_len;
@@ -102,14 +102,19 @@ public class NodeMessage {
         return d_value;
     }
 
-    public void setDValueRandom() {
-        this.d_value = random.nextFloat();
+    public double setDValueRandom() {
+        this.d_value = random.nextDouble();
+        return d_value;
     }
 
-    public void setDValue(float d_value) {
+    public void setDValue(double d_value) {
         this.d_value = d_value;
     }
 
+    /**
+     * метод возвращает идентификатор узла
+     * @return i_idNode: идентификатор узла
+     */
     public int getIIdNode() {
         return i_idNode;
     }
@@ -161,7 +166,7 @@ public class NodeMessage {
                 "\tID Object: %d\n"+
                 "\tCode command: %d (%s)\n"+
                 "\tCode answer : %d (%s)\n" +
-                "\td_value:%3.6f\n",
+                "\td_value:%4.10f\n",
                 i_idNode,
                 h_idObj,
                 i_codeCommand,this.cl.errMessage(i_codeCommand),
