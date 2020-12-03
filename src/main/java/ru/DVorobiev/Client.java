@@ -46,16 +46,16 @@ public class Client {
 	 * метод для завершения работы сервера
 	 * @throws IOException:
 	 */
-	public void exit_server() throws IOException {
-		send_command(msgToSend.cl.CODE_EXIT_SERVER);
+	public void exitServer() throws IOException {
+		sendCommand(msgToSend.cl.CODE_EXIT_SERVER);
 //		send_command(msgToSend.cl.CODE_EXIT_SERVER); // это костыль надо разобраться в причине, потом убрать
 	}
 	/**
 	 * метод для завершения сеанса работы клиента
 	 * @throws IOException:
 	 */
-	public void exit_session() throws IOException {
-		send_command(msgToSend.cl.CODE_EXIT);
+	public void exitSession() throws IOException {
+		sendCommand(msgToSend.cl.CODE_EXIT);
 	}
 
 	/**
@@ -64,12 +64,12 @@ public class Client {
 	 * @param id_obj : номер объекта
 	 * @throws IOException
 	 */
-	public int find_node_obj(int id_node, int id_obj) throws IOException {
+	public int findNodeObj(int id_node, int id_obj) throws IOException {
 		int i_status;
 		msgToSend.setI_idNode(id_node);
 		msgToSend.setH_idObj(id_obj);
 		msgToSend.setS_message();			// сфоруем телеграмму на посылку данных
-		i_status=send_command(msgToSend.cl.CODE_FIND_NODES);
+		i_status= sendCommand(msgToSend.cl.CODE_FIND_NODES);
 		return i_status;
 	}
 
@@ -78,8 +78,8 @@ public class Client {
 	 * содержимое хранилища выводится на сервере
 	 * @throws IOException:
 	 */
-	public void list_nodes() throws IOException {
-		send_command(msgToSend.cl.CODE_LIST_NODES);
+	public void listNodes() throws IOException {
+		sendCommand(msgToSend.cl.CODE_LIST_NODES);
 	}
 
 	/**
@@ -90,14 +90,14 @@ public class Client {
 	 * @return i_status:
 	 * @throws IOException:
 	 */
-	public int send_node(int id_node, int id_obj, float d_value) throws IOException {
+	public int sendNode(int id_node, int id_obj, float d_value) throws IOException {
 		int i_status;
 		msgToSend.setI_idNode(id_node);
 		msgToSend.setH_idObj(id_obj);
 		msgToSend.setD_value(d_value);
 		msgToSend.setI_typeData(2);
 		msgToSend.setS_message();			// сфоруем телеграмму на посылку данных
-		i_status=send_command(msgToSend.cl.CODE_SINGLE_START);
+		i_status= sendCommand(msgToSend.cl.CODE_SINGLE_START);
 		return i_status;
 	}
 	/**
@@ -110,17 +110,17 @@ public class Client {
 	 * @return i_status: код ошибки
 	 * @throws IOException:
 	 */
-	public int send_command(int code_command) throws IOException {
+	public int sendCommand(int code_command) throws IOException {
 		int i_status;
-		i_status=this.open_connect();		// инициируем объекты и устанавливаем связ с хостом
+		i_status=this.openConnect();		// инициируем объекты и устанавливаем связ с хостом
 		if (i_status!=this.msgToSend.cl.OK)
 			return i_status;
 		msgToSend.setI_codeCommand(code_command);
 		msgToSend.setS_message();	// сфоруем телеграмму на посылку данных
 		if (code_command==msgToSend.cl.CODE_EXIT_SERVER)
-			i_status = this.async_mode();    // используем асинхронную передачу данных
+			i_status = this.asyncMode();    // используем асинхронную передачу данных
 		else
-			i_status=this.sync_mode();	// используем синхронную передачу данных
+			i_status=this.syncMode();	// используем синхронную передачу данных
 		if (i_status==msgToSend.cl.OK ||
 				i_status==msgToSend.cl.ERR_FUNC ||
 				i_status==msgToSend.cl.ERR ||
@@ -130,9 +130,9 @@ public class Client {
 		}
 		else {
 			errMessage=msgToSend.getS_message();
-			print_message(errMessage,PLCGlobals.INFO);
+			printMessage(errMessage,PLCGlobals.INFO);
 		}
-		i_status=this.close_connect();
+		i_status=this.closeConnect();
 		return i_status;
 	}
 
@@ -141,16 +141,16 @@ public class Client {
 	 * имитирует создание 10 узлов по 10 объектов в каждом, после
 	 * того как узлы будут сформированы посылает на сервер CODE_EXIT
 	 * и завершает работу клиента методы:
-	 * client.exit_session(), client.close_connect(); по завершению
+	 * client.exitSession(), client.closeConnect(); по завершению
 	 * использовать не нужно
 	 * @return i_status: код ошибки
 	 * @throws IOException:
 	 */
-	public int init_node() throws IOException {
+	public int initNode() throws IOException {
 		int i_status=this.msgToSend.cl.OK;
-		i_status=this.open_connect();		// инициируем объекты и устанавливаем связ с хостом
+		i_status=this.openConnect();		// инициируем объекты и устанавливаем связ с хостом
 		if (i_status!=this.msgToSend.cl.OK){
-			i_status=this.close_connect();
+			i_status=this.closeConnect();
 			return i_status;
 		}
 
@@ -169,7 +169,7 @@ public class Client {
 				}
 				msgToSend.setS_message();	// сфоруем телеграмму на посылку данных
 
-				i_status=this.sync_mode();	// используем синхронную передачу данных
+				i_status=this.syncMode();	// используем синхронную передачу данных
 				if (i_status==msgToSend.cl.OK ||
 						i_status==msgToSend.cl.ERR_FUNC ||
 						i_status==msgToSend.cl.ERR ||
@@ -179,12 +179,12 @@ public class Client {
 				}
 				else {
 					errMessage=msgToSend.getS_message();
-					print_message(errMessage,PLCGlobals.INFO);
+					printMessage(errMessage,PLCGlobals.INFO);
 				}
 
 			}
 		}
-		i_status=this.close_connect();
+		i_status=this.closeConnect();
 		return i_status;
 	}
 
@@ -195,13 +195,13 @@ public class Client {
 	 * @throws UnknownHostException:
 	 * @throws IOException:
 	 */
-	public int open_connect() throws UnknownHostException,IOException {
+	public int openConnect() throws UnknownHostException,IOException {
 		int i_status=this.msgToSend.cl.OK;
 		String line;
 		try {
 			InetAddress host = InetAddress.getByName(this.host);
 			errMessage = "Connecting to server on port " + this.serverPort;
-			this.print_message(errMessage, PLCGlobals.INFO);
+			this.printMessage(errMessage, PLCGlobals.INFO);
 
 			this.socket = new Socket(host, serverPort);
 			errMessage = "Just connected to " + socket.getRemoteSocketAddress();
@@ -211,13 +211,13 @@ public class Client {
 		catch(UnknownHostException ex) {
 			msgToSend.code_status=msgToSend.cl.UNKNOW_HOST;
 			msgToSend.errMessage=msgToSend.cl.errMessage(msgToSend.code_status);
-			this.print_message(errMessage,PLCGlobals.ERROR);
+			this.printMessage(errMessage,PLCGlobals.ERROR);
 			i_status=msgToSend.code_status;
 		}
 		catch(IOException e){
 			msgToSend.code_status=msgToSend.cl.RESET_HOST;
 			msgToSend.errMessage="Ошибка:"+e.getMessage();
-			this.print_message(errMessage,PLCGlobals.ERROR);
+			this.printMessage(errMessage,PLCGlobals.ERROR);
 			i_status=msgToSend.code_status;
 		}
 		return i_status;
@@ -229,7 +229,7 @@ public class Client {
 	 * @return i_status: код ошибки
 	 * @throws IOException:
 	 */
-	public int close_connect() throws IOException {
+	public int closeConnect() throws IOException {
 		int i_status=this.msgToSend.cl.OK;
 		try {
 			this.toServer.close();
@@ -237,7 +237,7 @@ public class Client {
 			this.socket.close();
 		} catch (IOException e) {
 			msgToSend.errMessage="Ошибка:"+e.getMessage();
-			this.print_message(errMessage,PLCGlobals.ERROR);
+			this.printMessage(errMessage,PLCGlobals.ERROR);
 			i_status=this.msgToSend.cl.ERR_CLOSE_CONNECT;
 		}
 		return i_status;
@@ -252,7 +252,7 @@ public class Client {
 	 * @throws UnknownHostException:
 	 * @throws IOException:
 	 */
-	public int sync_mode() throws UnknownHostException, IOException {
+	public int syncMode() throws UnknownHostException, IOException {
 		String line;
 		int i_status=this.msgToSend.cl.OK;
 		try {
@@ -261,26 +261,26 @@ public class Client {
 			i_status = msgToSend.parser(line);            		// разберем строку по переменным NodeStructure
 			if (i_status == msgToSend.cl.ERR_FUNC) {        	// отработка ошибки
 				errMessage = "Ошибка: " + msgToSend.errMessage;
-				this.print_message(errMessage, PLCGlobals.ERROR);
+				this.printMessage(errMessage, PLCGlobals.ERROR);
 				return i_status;
 			}
 			if (msgToSend.getI_code_answer() == msgToSend.cl.ERR) {
 				i_status=msgToSend.cl.ERR;
 				errMessage = "Ошибка: " + msgToSend.cl.errMessage(i_status);
-				this.print_message(errMessage, PLCGlobals.ERROR);
+				this.printMessage(errMessage, PLCGlobals.ERROR);
 				return i_status;
 			}
 		}
 		catch(UnknownHostException ex) {
 			msgToSend.code_status=msgToSend.cl.UNKNOW_HOST;
 			msgToSend.errMessage=msgToSend.cl.errMessage(msgToSend.code_status);
-			this.print_message(errMessage,PLCGlobals.ERROR);
+			this.printMessage(errMessage,PLCGlobals.ERROR);
 			i_status=msgToSend.code_status;
 		}
 		catch(IOException e){
 			msgToSend.code_status=msgToSend.cl.RESET_HOST;
 			msgToSend.errMessage="Ошибка:"+e.getMessage();
-			this.print_message(errMessage,PLCGlobals.ERROR);
+			this.printMessage(errMessage,PLCGlobals.ERROR);
 			i_status=msgToSend.code_status;
 		}
 		return i_status;
@@ -290,7 +290,7 @@ public class Client {
 	 * метод ассинхронной отправки сообщений на сервер
 	 * @return i_status:
 	 */
-	public int async_mode(){
+	public int asyncMode(){
 		int i_status=this.msgToSend.cl.OK;
 		this.toServer.println(msgToSend.getS_message());    // отправил в порт
 		return i_status;
@@ -301,7 +301,7 @@ public class Client {
 	 * @param messageErr: отладочное сообщение для вывода
 	 * @param key : уровень вывода информации от 0 до 4, коррелируется с debug
 	 */
-	public void print_message(String messageErr, int key){
+	public void printMessage(String messageErr, int key){
 		if (this.debug <= key){
 			Formatter f=new Formatter();
 			f.format("%1d : %s",key,messageErr);
@@ -319,7 +319,7 @@ public class Client {
 			String line;
 			InetAddress host = InetAddress.getByName(this.host);
 			errMessage="Connecting to server on port " + this.serverPort;
-			this.print_message(errMessage,PLCGlobals.INFO);
+			this.printMessage(errMessage,PLCGlobals.INFO);
 
 			this.socket = new Socket(host,serverPort);
 			errMessage="Just connected to " + socket.getRemoteSocketAddress();
