@@ -86,6 +86,7 @@ public class ApplicationTest
     public void sendNodeMulti(int nodes,int objs) throws IOException {
         Client client = new Client();
         double d_value;
+        client.debug=PLCGlobals.WARNING;
         for (int i=1; i<=nodes; i++)
             for (int j=1; j<=objs; j++) {
                 d_value = client.msgToSend.setDValueRandom();
