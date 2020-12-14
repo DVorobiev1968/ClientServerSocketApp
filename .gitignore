@@ -1,7 +1,9 @@
 # Project exclude paths
 /target/
+/Example/
 *.txt
 *.odg
 *.pdf
+*.log
 AppThreadTest.java
 ThreadTestExample.java

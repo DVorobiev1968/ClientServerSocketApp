@@ -2,6 +2,8 @@ package ru.DVorobiev;
 
 import org.junit.Test;
 import java.io.IOException;
+import ru.DVorobiev.ReportExcel;
+import ru.DVorobiev.model.DataSignal;
 
 class ThreadTest implements Runnable{
     private final String nameThread;
@@ -25,7 +27,8 @@ class ThreadTest implements Runnable{
             this.stateThread=RUN_THREAD;
             long start = System.currentTimeMillis();
             errMessage=String.format("Thread %s running.",nameThread);
-            ApplicationTest.test_send_node(id_Node, 0x1000+7,400);
+//            ApplicationTest.test_send_node(id_Node, 0x1000+7,400);
+            ApplicationTest.TestSendNode(id_Node, 0x1000+7,400,nameThread);
             System.out.println(errMessage);
             long time = System.currentTimeMillis() - start;
             float ms=(float)(time/1000);
@@ -58,18 +61,13 @@ class ThreadTest implements Runnable{
     public int getPriority() {
         return threadTest.getPriority();
     }
-
     public int getId_Node() {
         return id_Node;
     }
-
     public void setId_Node(int id_Node) {
         this.id_Node = id_Node;
     }
-
-    public int getStateThread() {
-        return stateThread;
-    }
+    public int getStateThread() { return stateThread; }
 }
 /**
  * Unit test for simple Application.
@@ -243,6 +241,46 @@ public class ApplicationTest
     }
 
     /**
+     * То же что и test_send_node, но выводит результат в файл ./*.xls
+     * @param id_Node: идентификатор узла
+     * @param id_Obj: идентификатор объекта
+     * @param n_itteration: кол-во иттераций синхронной передачи данных на сервер
+     * @param name_sheet: наименования листа рабочей книги
+     * @throws IOException: исключение ввода/вывода
+     * @throws InterruptedException: исключение прерывания
+     */
+    public static void TestSendNode(int id_Node, int id_Obj, int n_itteration, String name_sheet) throws IOException, InterruptedException {
+        Client client = new Client();
+        ReportExcel reportExcel=new ReportExcel(name_sheet);
+
+        double d_value;
+        double radian;
+        client.debug=2;         // для ускорения выставляем уровень WARNING
+        String errMessage;
+
+        long start = System.currentTimeMillis();
+        errMessage=String.format("Starting test test_send_node for Node: %d/%d, %d-itteration",
+                id_Node,id_Obj,n_itteration);
+        System.out.println(errMessage);
+        for(int i=0, grad=0; i<=n_itteration;i++, grad++){
+            if (grad > 360)
+                grad=0;
+            radian=Math.toRadians(grad);
+            d_value=Math.sin(radian);
+            client.sendNode(id_Node,id_Obj, d_value);
+            DataSignal dataSignal=new DataSignal(id_Node,id_Obj,d_value,client.msgToSend.getDValue());
+            reportExcel.list.add(dataSignal);
+        }
+        client.exitSession();
+        long time = System.currentTimeMillis() - start;
+        float ms=(float)(time/1000);
+        errMessage=String.format("Test test_send_node time: %4.3f(sec.)",ms);
+        reportExcel.CreateReport();
+        System.out.println(errMessage);
+        System.out.println(reportExcel.errMessage);
+    }
+
+    /**
      * Тест для проверки производителности работы Сервера, заключается в посылке
      * значения на узел указанный узел, объект, кол-во иттераций 400.
      * @throws IOException: исключение ввода/вывода
@@ -250,7 +288,8 @@ public class ApplicationTest
      */
     @Test
     public void perfomanceSendNodeValue() throws IOException, InterruptedException {
-        test_send_node(5, 0x1000+7,400);
+//        test_send_node(5, 0x1000+7,400);
+        TestSendNode(5, 0x1000+7,400,"values");
     }
     /**
      * Тест для проверки производителности работы Сервера, тоже что и
