@@ -35,8 +35,8 @@ public class Application
         int id_Node=5;
         int id_Obj=0x1000+7;
 
-        test_send_node(id_Node, id_Obj,1000);
-        //        Client client = new Client();
+//        test_send_node(id_Node, id_Obj,1000);
+        Client client = new Client();
 
 
 //        client.sendNode(id_Node,id_Obj, 111.111);
@@ -46,7 +46,7 @@ public class Application
 //		client.findNodeObj(11,0x1000);
 //        System.out.print(client.msgToSend.getNodeInfo());
 //		client.listNodes();
-//		client.exitSession();
-//        client.exitServer();
+		client.exitSession();
+        client.exitServer();
     }
 }

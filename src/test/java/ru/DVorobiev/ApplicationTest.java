@@ -1,10 +1,76 @@
 package ru.DVorobiev;
 
-import static org.junit.Assert.assertTrue;
-
 import org.junit.Test;
 import java.io.IOException;
 
+class ThreadTest implements Runnable{
+    private final String nameThread;
+    private String errMessage;
+    private int id_Node;
+    private int stateThread;
+    public static final int INIT_THREAD = 0;
+    public static final int START_THREAD = 1;
+    public static final int ERROR_THREAD = -1;
+    public static final int RUN_THREAD = 2;
+    public static final int CANCEL_THREAD = 3;
+    Thread threadTest;
+
+    ThreadTest(String name){
+        stateThread=INIT_THREAD;
+        nameThread=name;
+    }
+    @Override
+    public void run() {
+        try {
+            this.stateThread=RUN_THREAD;
+            long start = System.currentTimeMillis();
+            errMessage=String.format("Thread %s running.",nameThread);
+            ApplicationTest.test_send_node(id_Node, 0x1000+7,400);
+            System.out.println(errMessage);
+            long time = System.currentTimeMillis() - start;
+            float ms=(float)(time/1000);
+            errMessage=String.format("Thread %s:Test test_send_node time: %4.3f(sec.)",nameThread,ms);
+            System.out.println(errMessage);
+            Thread.sleep(1000);
+            this.stateThread=CANCEL_THREAD;
+        } catch (InterruptedException | IOException e) {
+            errMessage="Error:"+e.getMessage();
+            System.out.println(errMessage);
+            this.stateThread=ERROR_THREAD;
+        }
+    }
+    public void start() {
+        errMessage=String.format("Thread %s started for Node %d",nameThread,id_Node);
+        if (threadTest==null){
+            this.stateThread=START_THREAD;
+            threadTest=new Thread(this,nameThread);
+            errMessage=String.format("Thread %s new started for Node %d",nameThread,id_Node);
+            threadTest.start();
+        }
+        System.out.println(errMessage);
+    }
+    public String getName() {
+        return threadTest.getName();
+    }
+    public void setPriority(int i) {
+        threadTest.setPriority(i);
+    }
+    public int getPriority() {
+        return threadTest.getPriority();
+    }
+
+    public int getId_Node() {
+        return id_Node;
+    }
+
+    public void setId_Node(int id_Node) {
+        this.id_Node = id_Node;
+    }
+
+    public int getStateThread() {
+        return stateThread;
+    }
+}
 /**
  * Unit test for simple Application.
  */
@@ -137,5 +203,81 @@ public class ApplicationTest
         client.initNode(nodes,objs);
         long time = System.currentTimeMillis() - start;
         System.out.println("Test InitNode time: " + time);
+    }
+
+    /**
+     * Функция посылки значения на узел указанный узел, объект, кол-во иттераций.
+     * Посылаемое технологическое значение  является функцией sin от угла в диапазоне от 0-360 градусов.
+     * Одна иттерация это изменение аргумента sin(), на 1 градус.
+     * Для ускорения вывод отладочных сообщений установлен на уровне WARNING
+     * @param id_Node: идентификатор узла
+     * @param id_Obj: идентификатор объекта
+     * @param n_itteration: кол-во иттераций синхронной передачи данных на сервер
+     * @throws IOException: исключение ввода/вывода
+     * @throws InterruptedException: исключение прерывания
+     */
+    public static void test_send_node(int id_Node, int id_Obj, int n_itteration) throws IOException, InterruptedException {
+        Client client = new Client();
+        double d_value;
+        double radian;
+        client.debug=2;
+        String errMessage;
+
+        long start = System.currentTimeMillis();
+        errMessage=String.format("Starting test test_send_node for Node: %d/%d, %d-itteration",
+                id_Node,id_Obj,n_itteration);
+        System.out.println(errMessage);
+
+        for(int i=0, grad=0; i<=n_itteration;i++, grad++){
+            if (grad > 360)
+                grad=0;
+            radian=Math.toRadians(grad);
+            d_value=Math.sin(radian);
+            client.sendNode(id_Node,id_Obj, d_value);
+        }
+        client.exitSession();
+        long time = System.currentTimeMillis() - start;
+        float ms=(float)(time/1000);
+        errMessage=String.format("Test test_send_node time: %4.3f(sec.)",ms);
+        System.out.println(errMessage);
+    }
+
+    /**
+     * Тест для проверки производителности работы Сервера, заключается в посылке
+     * значения на узел указанный узел, объект, кол-во иттераций 400.
+     * @throws IOException: исключение ввода/вывода
+     * @throws InterruptedException: исключение по прерыванию
+     */
+    @Test
+    public void perfomanceSendNodeValue() throws IOException, InterruptedException {
+        test_send_node(5, 0x1000+7,400);
+    }
+    /**
+     * Тест для проверки производителности работы Сервера, тоже что и
+     * perfomanceSendNodeValue, но одновременно с 4 потоками.
+     */
+    @Test
+    public void perfomanceSendNodeValueMulti(){
+        try {
+            ThreadTest testThread1 = new ThreadTest("Test1");
+            testThread1.setId_Node(1);
+            ThreadTest testThread2 = new ThreadTest("Test2");
+            testThread2.setId_Node(2);
+            ThreadTest testThread3 = new ThreadTest("Test3");
+            testThread3.setId_Node(3);
+            ThreadTest testThread4 = new ThreadTest("Test4");
+            testThread4.setId_Node(4);
+            testThread1.start();
+            testThread2.start();
+            testThread3.start();
+            testThread4.start();
+            while (testThread1.getStateThread()<ThreadTest.CANCEL_THREAD &&
+                    testThread2.getStateThread()<ThreadTest.CANCEL_THREAD &&
+                    testThread3.getStateThread()<ThreadTest.CANCEL_THREAD &&
+                    testThread4.getStateThread()<ThreadTest.CANCEL_THREAD)
+                Thread.sleep(1000);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
