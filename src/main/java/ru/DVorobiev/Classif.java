@@ -20,8 +20,12 @@ public class Classif {
     final public int CODE_START=1;
     final public int CODE_STOP=2;
     final public int CODE_SINGLE_START=3;
+    final public int CODE_SINGLE_START_SYNC = 4;
+    final public int CODE_SINGLE_START_ASYNC = 5;
     final public int CODE_LIST_NODES = 10;
     final public int CODE_FIND_NODES=11;
+    final public int CODE_LOAD_FOR_ALGORITM = 12;
+    final public int CODE_SAVE_FOR_ALGORITM = 13;
     final public int CODE_EXIT = 20;
     final public int CODE_EXIT_SERVER = 21;
 
@@ -31,8 +35,12 @@ public class Classif {
         states.put(CODE_START, "Start command");
         states.put(CODE_STOP, "Stop command");
         states.put(CODE_SINGLE_START, "Single start command");
+        states.put(CODE_SINGLE_START_SYNC, "Single start command synchronisation with FB");
+        states.put(CODE_SINGLE_START_ASYNC, "Single start command no wait synchronisation with FB");
         states.put(CODE_LIST_NODES, "Printing nodes list");
         states.put(CODE_FIND_NODES, "Search nodes and objext");
+        states.put(CODE_LOAD_FOR_ALGORITM, "Search nodes and objext and load data of node for Algoritm");
+        states.put(CODE_SAVE_FOR_ALGORITM, "Save data from Algoritm");
         states.put(CODE_EXIT, "Close connect Client stopped");
         states.put(CODE_EXIT_SERVER, "Close connect Server stopped");
         states.put(UNKNOW_HOST,"UnknownHostException");

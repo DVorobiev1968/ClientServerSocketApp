@@ -80,20 +80,37 @@ public class Client {
 	}
 
 	/**
-	 * создание узла, с набором необходимых параметров
+	 * создание узла, с набором необходимых параметров в синхронном режиме
 	 * @param id_node : номер узла
 	 * @param id_obj : номер объекта в узле
 	 * @param d_value : значение
 	 * @return i_status: код ошибки
 	 */
-	public int sendNode(int id_node, int id_obj, double d_value) throws IOException {
+	public int sendNodeSync(int id_node, int id_obj, double d_value) throws IOException {
 		int i_status;
 		msgToSend.setIIdNode(id_node);
 		msgToSend.setHIdObj(id_obj);
 		msgToSend.setDValue(d_value);
 		msgToSend.setITypeData(3);
 		msgToSend.setSMessage();			// сфоруем телеграмму на посылку данных
-		i_status= sendCommand(msgToSend.cl.CODE_SINGLE_START);
+		i_status= sendCommand(msgToSend.cl.CODE_SINGLE_START_SYNC);
+		return i_status;
+	}
+	/**
+	 * создание узла, с набором необходимых параметров
+	 * @param id_node : номер узла
+	 * @param id_obj : номер объекта в узле
+	 * @param d_value : значение
+	 * @return i_status: код ошибки
+	 */
+	public int sendNode(int id_node, int id_obj, double d_value, int i_command) throws IOException {
+		int i_status;
+		msgToSend.setIIdNode(id_node);
+		msgToSend.setHIdObj(id_obj);
+		msgToSend.setDValue(d_value);
+		msgToSend.setITypeData(3);
+		msgToSend.setSMessage();			// сфоруем телеграмму на посылку данных
+		i_status= sendCommand(i_command);
 		return i_status;
 	}
 	/**
@@ -212,12 +229,14 @@ public class Client {
 		catch(UnknownHostException ex) {
 			msgToSend.code_status=msgToSend.cl.UNKNOW_HOST;
 			msgToSend.errMessage=msgToSend.cl.errMessage(msgToSend.code_status);
+			errMessage=msgToSend.errMessage;
 			this.printMessage(errMessage,PLCGlobals.ERROR);
 			i_status=msgToSend.code_status;
 		}
 		catch(IOException e){
 			msgToSend.code_status=msgToSend.cl.RESET_HOST;
-			msgToSend.errMessage="Ошибка:"+e.getMessage();
+			msgToSend.errMessage="Error:"+e.getMessage();
+			errMessage=msgToSend.errMessage;
 			this.printMessage(errMessage,PLCGlobals.ERROR);
 			i_status=msgToSend.code_status;
 		}

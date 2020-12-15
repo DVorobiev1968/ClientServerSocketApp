@@ -29,6 +29,7 @@ public class ReportExcel {
     public String path;
     public static final int OK=0;
     public static final int ERR=-1;
+    public static final int EMPTY=-2;
 
     public String getPath() {
         return path;
@@ -48,6 +49,12 @@ public class ReportExcel {
         path=new String();
         path=String.format("./%s.xls",name_sheet);
     }
+
+    /**
+     * Метод формирует отчет в Excel
+     * @return : OK, ERR - в случае исключения, EMPTY - нет данных
+     * @throws IOException:
+     */
     public int CreateReport() throws IOException {
         int rownum = 0;
         Cell cell;
@@ -81,7 +88,7 @@ public class ReportExcel {
             rownum++;
             row = sheet.createRow(rownum);
             cell = row.createCell(0, CellType.STRING);
-            cell.setCellValue(item.getStringDate());
+            cell.setCellValue(item.getStringDate(item.getDate()));
             cell = row.createCell(1, CellType.NUMERIC);
             cell.setCellValue(item.getId_Node());
             cell = row.createCell(2, CellType.NUMERIC);
@@ -91,18 +98,22 @@ public class ReportExcel {
             cell = row.createCell(4, CellType.NUMERIC);
             cell.setCellValue(item.getD_value());
         }
-        try {
-            File file = new File(String.format("%s",path));
-            file.getParentFile().mkdirs();
+        if (rownum > 0) {
+            try {
+                File file = new File(String.format("%s", path));
+                file.getParentFile().mkdirs();
 
-            FileOutputStream outFile = new FileOutputStream(file);
-            workbook.write(outFile);
-            errMessage=String.format("Created file: %s", file.getAbsolutePath());
-            return OK;
-        } catch (IOException e) {
-            errMessage=e.getMessage();
-            return ERR;
+                FileOutputStream outFile = new FileOutputStream(file);
+                workbook.write(outFile);
+                errMessage = String.format("Created file: %s", file.getAbsolutePath());
+                return OK;
+            } catch (IOException e) {
+                errMessage = e.getMessage();
+                return ERR;
+            }
         }
+        errMessage = String.format("Count rows: %d. Report not create.",rownum);
+        return EMPTY;
     }
 
     /**

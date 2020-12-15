@@ -2,33 +2,36 @@ package ru.DVorobiev;
 
 import org.junit.Test;
 import java.io.IOException;
-import ru.DVorobiev.ReportExcel;
 import ru.DVorobiev.model.DataSignal;
 
 class ThreadTest implements Runnable{
     private final String nameThread;
     private String errMessage;
     private int id_Node;
+    private int id_Obj;
     private int stateThread;
     public static final int INIT_THREAD = 0;
     public static final int START_THREAD = 1;
     public static final int ERROR_THREAD = -1;
     public static final int RUN_THREAD = 2;
     public static final int CANCEL_THREAD = 3;
+
     Thread threadTest;
 
     ThreadTest(String name){
         stateThread=INIT_THREAD;
         nameThread=name;
+        id_Obj=0x1000+7;
     }
     @Override
     public void run() {
         try {
+            Classif classif=new Classif();
             this.stateThread=RUN_THREAD;
             long start = System.currentTimeMillis();
             errMessage=String.format("Thread %s running.",nameThread);
 //            ApplicationTest.test_send_node(id_Node, 0x1000+7,400);
-            ApplicationTest.TestSendNode(id_Node, 0x1000+7,400,nameThread);
+            ApplicationTest.TestSendNode(id_Node,id_Obj,400,nameThread,classif.CODE_SINGLE_START);
             System.out.println(errMessage);
             long time = System.currentTimeMillis() - start;
             float ms=(float)(time/1000);
@@ -94,7 +97,7 @@ public class ApplicationTest
         String s_temp;
 
         long start = System.currentTimeMillis();
-        client.sendNode(11,0x1000, 100.00000001);
+        client.sendNode(11,0x1000, 100.00000001,client.msgToSend.cl.CODE_SINGLE_START);
         i_idNode=client.msgToSend.getIIdNode();
         h_idObj=client.msgToSend.getHIdObj();
         h_idSubObj=client.msgToSend.getHIdSubObj();
@@ -143,6 +146,18 @@ public class ApplicationTest
     }
 
     /**
+     * Метод для проведения теста на создание 10 узлов и 10 объектов в цикле
+     * с записью значения синхронном режиме
+     */
+    @Test
+    public void perfomanceSendNodeMultiSync() throws IOException {
+        long start = System.currentTimeMillis();
+        sendNodeMultiSync(1,10);
+        long time = System.currentTimeMillis() - start;
+        System.out.println("Test sendNodeMultiSync time: " + time);
+    }
+
+    /**
      * Метод для проведения теста на создание узлов и объектов в цикле с записью значения
      * Результат сохраняется в классе msgToSend
      * метод getNodeInfo выводит информацию в удобном виде
@@ -154,7 +169,28 @@ public class ApplicationTest
         for (int i=1; i<=nodes; i++)
             for (int j=1; j<=objs; j++) {
                 d_value = client.msgToSend.setDValueRandom();
-                client.sendNode(i, 0x1000 + j, d_value);
+                client.sendNode(i, 0x1000 + j, d_value,client.msgToSend.cl.CODE_SINGLE_START);
+                // этот же результат но с использованием функции вывода информауии об узле
+                System.out.print(client.msgToSend.getNodeInfo());
+            }
+        client.exitSession();
+    }
+
+    /**
+     * Метод для проведения теста на синхронное создание
+     * узлов и объектов в цикле с записью значения
+     * Результат сохраняется в классе msgToSend
+     * метод getNodeInfo выводит информацию в удобном виде
+     * В режиме синхронной записи значений, клиент ожидает реакции FB Beremiz
+     *      */
+    public void sendNodeMultiSync(int nodes,int objs) throws IOException {
+        Client client = new Client();
+        double d_value;
+        client.debug=PLCGlobals.WARNING;
+        for (int i=1; i<=nodes; i++)
+            for (int j=1; j<=objs; j++) {
+                d_value = client.msgToSend.setDValueRandom();
+                client.sendNode(i, 0x1000 + j, d_value,client.msgToSend.cl.CODE_SINGLE_START);
                 // этот же результат но с использованием функции вывода информауии об узле
                 System.out.print(client.msgToSend.getNodeInfo());
             }
@@ -231,7 +267,7 @@ public class ApplicationTest
                 grad=0;
             radian=Math.toRadians(grad);
             d_value=Math.sin(radian);
-            client.sendNode(id_Node,id_Obj, d_value);
+            client.sendNode(id_Node,id_Obj, d_value,client.msgToSend.cl.CODE_SINGLE_START);
         }
         client.exitSession();
         long time = System.currentTimeMillis() - start;
@@ -249,7 +285,7 @@ public class ApplicationTest
      * @throws IOException: исключение ввода/вывода
      * @throws InterruptedException: исключение прерывания
      */
-    public static void TestSendNode(int id_Node, int id_Obj, int n_itteration, String name_sheet) throws IOException, InterruptedException {
+    public static void TestSendNode(int id_Node, int id_Obj, int n_itteration, String name_sheet, int i_command) throws IOException, InterruptedException {
         Client client = new Client();
         ReportExcel reportExcel=new ReportExcel(name_sheet);
 
@@ -257,6 +293,7 @@ public class ApplicationTest
         double radian;
         client.debug=2;         // для ускорения выставляем уровень WARNING
         String errMessage;
+        int i_status;
 
         long start = System.currentTimeMillis();
         errMessage=String.format("Starting test test_send_node for Node: %d/%d, %d-itteration",
@@ -267,7 +304,9 @@ public class ApplicationTest
                 grad=0;
             radian=Math.toRadians(grad);
             d_value=Math.sin(radian);
-            client.sendNode(id_Node,id_Obj, d_value);
+            i_status=client.sendNode(id_Node,id_Obj, d_value,i_command);
+            if (i_status!=client.msgToSend.cl.OK)
+                break;
             DataSignal dataSignal=new DataSignal(id_Node,id_Obj,d_value,client.msgToSend.getDValue());
             reportExcel.list.add(dataSignal);
         }
@@ -288,8 +327,23 @@ public class ApplicationTest
      */
     @Test
     public void perfomanceSendNodeValue() throws IOException, InterruptedException {
+        Classif classif=new Classif();
 //        test_send_node(5, 0x1000+7,400);
-        TestSendNode(5, 0x1000+7,400,"values");
+        TestSendNode(5, 0x1000+7,400,"values",classif.CODE_SINGLE_START);
+    }
+    /**
+     * Тест для проверки производителности работы Сервера,
+     * заключается в синхронной посылке,
+     * значения на узел указанный узел, объект, кол-во иттераций 400.
+     * Данный режим предусматривает что клиент должен ожидать ответа
+     * от Сервера, по готовности ФБ Beremiz
+     * @throws IOException: исключение ввода/вывода
+     * @throws InterruptedException: исключение по прерыванию
+     */
+    @Test
+    public void perfomanceSendNodeValueSync() throws IOException, InterruptedException {
+        Classif classif=new Classif();
+        TestSendNode(1, 0x1000+7,400,"ValuesSinc",classif.CODE_SINGLE_START_SYNC);
     }
     /**
      * Тест для проверки производителности работы Сервера, тоже что и

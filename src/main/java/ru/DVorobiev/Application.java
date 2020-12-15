@@ -23,7 +23,7 @@ public class Application
                 grad=0;
             radian=Math.toRadians(grad);
             d_value=Math.sin(radian);
-            client.sendNode(id_Node,id_Obj, d_value);
+            client.sendNode(id_Node,id_Obj, d_value,3); //CODE_SINGLE_START
             Thread.sleep(1100);
         }
         client.exitSession();
