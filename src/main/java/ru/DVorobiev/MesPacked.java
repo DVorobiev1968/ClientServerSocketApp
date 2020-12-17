@@ -39,7 +39,7 @@ public class MesPacked {
 		f.format("%d;%d;%d;%d;%d;%d;%f;",i_idNode,i_codeCommand,i_code_answer,h_idObj,h_idSubObj,i_typeData,d_value);
 		String s_temp=f.toString();
 		int i_len=s_temp.length();
-		String s_len=Integer.toString(i_len+4);	// учитываем служебные символы
+		String s_len=Integer.toString(i_len+3);	// учитываем служебные символы может меняться из-за кодировки utf-8(+3)/ascii(+4)
 		this.s_message = s_temp+s_len;
 	}
 

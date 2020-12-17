@@ -95,43 +95,51 @@ public class ApplicationTest
         String s_message;	// строка получаемая из буфера
         double d_value;     // возвращаемое значение
         String s_temp;
+        int i_status;
 
         long start = System.currentTimeMillis();
-        client.sendNode(11,0x1000, 100.00000001,client.msgToSend.cl.CODE_SINGLE_START);
-        i_idNode=client.msgToSend.getIIdNode();
-        h_idObj=client.msgToSend.getHIdObj();
-        h_idSubObj=client.msgToSend.getHIdSubObj();
-        i_codeCommand=client.msgToSend.getICodeCommand();
-        i_code_answer=client.msgToSend.getICodeAnswer();
-        s_command=client.msgToSend.getSCommand();
-        s_message=client.msgToSend.getSMessage();
-        i_typeData=client.msgToSend.getITypeData();
-        d_value=client.msgToSend.d_value;
-        s_temp=String.format("Node advanced information: \n" +
-                        "\tID Node: %d\n" +
-                        "\tID Object: %d\n"+
-                        "\tID SubObject: %d\n"+
-                        "\tCode command: %d(%s)\n"+
-                        "\tReference command:%s\n" +
-                        "\tCode answer : %d(%s)\n" +
-                        "\ts_message from telegram: %s\n" +
-                        "\td_value:%4.10f(type %d)\n",
-                i_idNode,
-                h_idObj,
-                h_idSubObj,
-                i_codeCommand,client.msgToSend.cl.errMessage(i_codeCommand),
-                s_command,
-                i_code_answer,client.msgToSend.cl.errMessage(i_code_answer),
-                s_message,
-                d_value,
-                i_typeData);
-        System.out.print(s_temp);
+        i_status=client.sendNode(11,0x1000, 100.00000001,client.msgToSend.cl.CODE_SINGLE_START);
+        if (i_status==client.msgToSend.cl.OK) {
+            i_idNode = client.msgToSend.getIIdNode();
+            h_idObj = client.msgToSend.getHIdObj();
+            h_idSubObj = client.msgToSend.getHIdSubObj();
+            i_codeCommand = client.msgToSend.getICodeCommand();
+            i_code_answer = client.msgToSend.getICodeAnswer();
+            s_command = client.msgToSend.getSCommand();
+            s_message = client.msgToSend.getSMessage();
+            i_typeData = client.msgToSend.getITypeData();
+            d_value = client.msgToSend.d_value;
+            s_temp = String.format("Node advanced information: \n" +
+                            "\tID Node: %d\n" +
+                            "\tID Object: %d\n" +
+                            "\tID SubObject: %d\n" +
+                            "\tCode command: %d(%s)\n" +
+                            "\tReference command:%s\n" +
+                            "\tCode answer : %d(%s)\n" +
+                            "\ts_message from telegram: %s\n" +
+                            "\td_value:%4.10f(type %d)\n",
+                    i_idNode,
+                    h_idObj,
+                    h_idSubObj,
+                    i_codeCommand, client.msgToSend.cl.errMessage(i_codeCommand),
+                    s_command,
+                    i_code_answer, client.msgToSend.cl.errMessage(i_code_answer),
+                    s_message,
+                    d_value,
+                    i_typeData);
+            System.out.print(s_temp);
 
-        // этот же результат но с использованием функции вывода информауии об узле
-        System.out.print(client.msgToSend.getNodeInfo());
-        client.exitSession();
+            // этот же результат но с использованием функции вывода информауии об узле
+            System.out.print(client.msgToSend.getNodeInfo());
+        }
+        else {
+            s_temp=String.format("Error code:%d (%s)\n",i_status,client.errMessage);
+            System.out.print(s_temp);
+        }
         long time = System.currentTimeMillis() - start;
-        System.out.println("Test sendNode time: " + time);
+        double ms=new Double(time/1000);
+        s_message=String.format("Test test_send_node time: %4.6f(sec.) %d(ms)",ms,time);
+        System.out.println(s_message);
     }
 
     /**
@@ -142,7 +150,7 @@ public class ApplicationTest
         long start = System.currentTimeMillis();
         sendNodeMulti(10,10);
         long time = System.currentTimeMillis() - start;
-        System.out.println("Test sendNodeMulti time: " + time);
+        System.out.println("Test sendNodeMulti time (ms): " + time);
     }
 
     /**
@@ -165,15 +173,23 @@ public class ApplicationTest
     public void sendNodeMulti(int nodes,int objs) throws IOException {
         Client client = new Client();
         double d_value;
+        int i_status=0;
+        String s_temp;
+
         client.debug=PLCGlobals.WARNING;
         for (int i=1; i<=nodes; i++)
             for (int j=1; j<=objs; j++) {
                 d_value = client.msgToSend.setDValueRandom();
-                client.sendNode(i, 0x1000 + j, d_value,client.msgToSend.cl.CODE_SINGLE_START);
-                // этот же результат но с использованием функции вывода информауии об узле
+                i_status=client.sendNode(i, 0x1000 + j, d_value,client.msgToSend.cl.CODE_SINGLE_START);
+                if (i_status!=client.msgToSend.cl.OK) {
+                    s_temp = String.format("Test canceled. Error code:%d (%s)\n", i_status, client.errMessage);
+                    i=nodes;
+                    System.out.print(s_temp);
+                    break;
+                }
+                // вывод информауии об узле
                 System.out.print(client.msgToSend.getNodeInfo());
             }
-        client.exitSession();
     }
 
     /**
@@ -186,15 +202,23 @@ public class ApplicationTest
     public void sendNodeMultiSync(int nodes,int objs) throws IOException {
         Client client = new Client();
         double d_value;
+        int i_status = 0;
+        String s_temp;
+
         client.debug=PLCGlobals.WARNING;
         for (int i=1; i<=nodes; i++)
             for (int j=1; j<=objs; j++) {
                 d_value = client.msgToSend.setDValueRandom();
-                client.sendNode(i, 0x1000 + j, d_value,client.msgToSend.cl.CODE_SINGLE_START);
+                i_status=client.sendNode(i, 0x1000 + j, d_value,client.msgToSend.cl.CODE_SINGLE_START_SYNC);
+                if (i_status!=client.msgToSend.cl.OK) {
+                    s_temp = String.format("Test canceled. Error code:%d (%s)\n", i_status, client.errMessage);
+                    i=nodes;
+                    System.out.print(s_temp);
+                    break;
+                }
                 // этот же результат но с использованием функции вывода информауии об узле
                 System.out.print(client.msgToSend.getNodeInfo());
             }
-        client.exitSession();
     }
 
     /**
@@ -207,11 +231,10 @@ public class ApplicationTest
         Client client = new Client();
 
         long start = System.currentTimeMillis();
-        client.findNodeObj(11,0x1000);
+        client.findNodeObj(5,0x1000);
         System.out.print(client.msgToSend.getNodeInfo());
-        client.exitSession();
         long time = System.currentTimeMillis() - start;
-        System.out.println("Test findNodeObj time: " + time);
+        System.out.println("Test findNodeObj time (ms): " + time);
     }
 
     /**
