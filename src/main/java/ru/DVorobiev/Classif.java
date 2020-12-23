@@ -15,6 +15,9 @@ public class Classif {
     final public int ERR=99;
     final public int SYNTAX_ERR=101;
     final public int ERR_FUNC=-1;
+    final public int READ_SOCKET_FAIL=68;
+    final public int READ_SOCKET_OK=69;
+
 
     // коды комманд
     final public int CODE_START=1;
@@ -48,6 +51,8 @@ public class Classif {
         states.put(ERR_CLOSE_CONNECT, "Error close connection");
         states.put(B_MESSAGE_EMPTY, "b_message it`s empty or Thread is done");
         states.put(ERR_FUNC, "Error functions: ");
+        states.put(READ_SOCKET_FAIL, "Error read from socket");
+        states.put(READ_SOCKET_OK, "Data read from socket it`s OK");
         states.put(SEARCH_FAIL, "Node and object not found");
         states.put(SEARCH_OK, "Node and object found OK");
         states.put(ERR, "General error");

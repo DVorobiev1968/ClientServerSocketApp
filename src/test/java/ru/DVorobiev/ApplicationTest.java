@@ -8,7 +8,7 @@ class ThreadTest implements Runnable{
     private final String nameThread;
     private String errMessage;
     private int id_Node;
-    private int id_Obj;
+    private final int id_Obj;
     private int stateThread;
     public static final int INIT_THREAD = 0;
     public static final int START_THREAD = 1;
@@ -31,7 +31,7 @@ class ThreadTest implements Runnable{
             long start = System.currentTimeMillis();
             errMessage=String.format("Thread %s running.",nameThread);
 //            ApplicationTest.test_send_node(id_Node, 0x1000+7,400);
-            ApplicationTest.TestSendNode(id_Node,id_Obj,400,nameThread,classif.CODE_SINGLE_START);
+            ApplicationTest.TestSendNode(id_Node,id_Obj,400,nameThread,classif.CODE_SINGLE_START, 0);
             System.out.println(errMessage);
             long time = System.currentTimeMillis() - start;
             float ms=(float)(time/1000);
@@ -136,8 +136,9 @@ public class ApplicationTest
             s_temp=String.format("Error code:%d (%s)\n",i_status,client.errMessage);
             System.out.print(s_temp);
         }
+//        client.exitSession();
         long time = System.currentTimeMillis() - start;
-        double ms=new Double(time/1000);
+        double ms=(double) (time/1000);
         s_message=String.format("Test test_send_node time: %4.6f(sec.) %d(ms)",ms,time);
         System.out.println(s_message);
     }
@@ -173,7 +174,7 @@ public class ApplicationTest
     public void sendNodeMulti(int nodes,int objs) throws IOException {
         Client client = new Client();
         double d_value;
-        int i_status=0;
+        int i_status;
         String s_temp;
 
         client.debug=PLCGlobals.WARNING;
@@ -190,6 +191,7 @@ public class ApplicationTest
                 // вывод информауии об узле
                 System.out.print(client.msgToSend.getNodeInfo());
             }
+//        client.exitSession();
     }
 
     /**
@@ -202,7 +204,7 @@ public class ApplicationTest
     public void sendNodeMultiSync(int nodes,int objs) throws IOException {
         Client client = new Client();
         double d_value;
-        int i_status = 0;
+        int i_status;
         String s_temp;
 
         client.debug=PLCGlobals.WARNING;
@@ -231,7 +233,7 @@ public class ApplicationTest
         Client client = new Client();
 
         long start = System.currentTimeMillis();
-        client.findNodeObj(5,0x1000);
+        client.findNodeObj(11,0x1000);
         System.out.print(client.msgToSend.getNodeInfo());
         long time = System.currentTimeMillis() - start;
         System.out.println("Test findNodeObj time (ms): " + time);
@@ -256,10 +258,10 @@ public class ApplicationTest
         s_temp=String.format("Starting Test InitNode for:%d nodes, %d objs objects in each node...",nodes,objs);
         System.out.println(s_temp);
         long start = System.currentTimeMillis();
-        client.debug=PLCGlobals.WARNING;
+//        client.debug=PLCGlobals.WARNING;
         client.initNode(nodes,objs);
         long time = System.currentTimeMillis() - start;
-        System.out.println("Test InitNode time: " + time);
+        System.out.println("Test InitNode time(ms): " + time);
     }
 
     /**
@@ -271,9 +273,8 @@ public class ApplicationTest
      * @param id_Obj: идентификатор объекта
      * @param n_itteration: кол-во иттераций синхронной передачи данных на сервер
      * @throws IOException: исключение ввода/вывода
-     * @throws InterruptedException: исключение прерывания
      */
-    public static void test_send_node(int id_Node, int id_Obj, int n_itteration) throws IOException, InterruptedException {
+    public static void test_send_node(int id_Node, int id_Obj, int n_itteration) throws IOException{
         Client client = new Client();
         double d_value;
         double radian;
@@ -300,15 +301,26 @@ public class ApplicationTest
     }
 
     /**
+     * Функция для отладки, предназначена для посылки значения на узел указанный узел, объект, кол-во иттераций.
+     * Посылаемое технологическое значение  является функцией sin от угла в диапазоне от 0-360 градусов.
+     * Одна иттерация это изменение аргумента sin(), на 1 градус.
+     * Предусмотрено использование отладка работы алгортмов для этого опрашивается
+     * соседний объект (id_Obj+1) в котором должно записываться рассчитанное алгоритмом значение.
+     * Паараметр для синхронизации с алгоритмом timeout, предназначен для задержки повторного
+     * имитационного сигнала.
+     * Для ускорения вывод отладочных сообщений установлен на уровне WARNING
+
      * То же что и test_send_node, но выводит результат в файл ./*.xls
      * @param id_Node: идентификатор узла
      * @param id_Obj: идентификатор объекта
      * @param n_itteration: кол-во иттераций синхронной передачи данных на сервер
      * @param name_sheet: наименования листа рабочей книги
+     * @param i_command: код команды
+     * @param timeout: интервал для синхронизации в мс
      * @throws IOException: исключение ввода/вывода
      * @throws InterruptedException: исключение прерывания
      */
-    public static void TestSendNode(int id_Node, int id_Obj, int n_itteration, String name_sheet, int i_command) throws IOException, InterruptedException {
+    public static void TestSendNode(int id_Node, int id_Obj, int n_itteration, String name_sheet, int i_command, long timeout) throws IOException, InterruptedException {
         Client client = new Client();
         ReportExcel reportExcel=new ReportExcel(name_sheet);
 
@@ -330,16 +342,33 @@ public class ApplicationTest
             i_status=client.sendNode(id_Node,id_Obj, d_value,i_command);
             if (i_status!=client.msgToSend.cl.OK)
                 break;
+            i_status=client.findNodeObj(id_Node,id_Obj+1);
+            if (i_status!=client.msgToSend.cl.OK)
+                break;
             DataSignal dataSignal=new DataSignal(id_Node,id_Obj,d_value,client.msgToSend.getDValue());
             reportExcel.list.add(dataSignal);
+            if (timeout>0)
+                Thread.sleep(timeout);
         }
-        client.exitSession();
         long time = System.currentTimeMillis() - start;
-        float ms=(float)(time/1000);
-        errMessage=String.format("Test test_send_node time: %4.3f(sec.)",ms);
+        errMessage=String.format("Test test_send_node time: %d(ms)",time);
         reportExcel.CreateReport();
         System.out.println(errMessage);
         System.out.println(reportExcel.errMessage);
+    }
+    /**
+     * Тест для отладки работы Сервера, заключается в посылке
+     * значения на узел узел id_Node=1, объект id_Obj=4096, кол-во иттераций 400,
+     * с указанным в сек. интервалом
+     * @throws IOException: исключение ввода/вывода
+     * @throws InterruptedException: исключение по прерыванию
+     */
+    @Test
+    public void debugSendNodeValue() throws IOException, InterruptedException {
+        Classif classif=new Classif();
+        long t;
+        t=100;
+        TestSendNode(1, 0x1000,400,"values",classif.CODE_SINGLE_START,t);
     }
 
     /**
@@ -351,8 +380,7 @@ public class ApplicationTest
     @Test
     public void perfomanceSendNodeValue() throws IOException, InterruptedException {
         Classif classif=new Classif();
-//        test_send_node(5, 0x1000+7,400);
-        TestSendNode(5, 0x1000+7,400,"values",classif.CODE_SINGLE_START);
+        TestSendNode(1, 0x1000,400,"values",classif.CODE_SINGLE_START,0);
     }
     /**
      * Тест для проверки производителности работы Сервера,
@@ -366,7 +394,7 @@ public class ApplicationTest
     @Test
     public void perfomanceSendNodeValueSync() throws IOException, InterruptedException {
         Classif classif=new Classif();
-        TestSendNode(1, 0x1000+7,400,"ValuesSinc",classif.CODE_SINGLE_START_SYNC);
+        TestSendNode(1, 0x1000+7,400,"ValuesSinc",classif.CODE_SINGLE_START_SYNC,0);
     }
     /**
      * Тест для проверки производителности работы Сервера, тоже что и

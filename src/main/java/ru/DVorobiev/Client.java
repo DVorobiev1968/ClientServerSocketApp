@@ -25,7 +25,8 @@ public class Client {
 	public int debug;				// для отладки кода, определяет уровень вывода сообщений 0-4, 0-выводятся все сообщения, 4 - не выводятся
 	private PrintWriter toServer;	// объект для записи сообщений на сервер
 	private BufferedReader fromServer; // объект для чтения сообщений от сервера
-	private Socket socket;				// объект socket
+	private Socket socket;					// объект socket
+	public static final int MAX_BUF=100;	// максимальый размер буфера для считывания данных
 
 	/**
 	 * конструктор базового класса инициализация следующих св-в:
@@ -166,7 +167,7 @@ public class Client {
 			n_Node=msgToSend.MAX_NODE;
 		if (n_Obj<1)
 			n_Obj=msgToSend.MAX_NODE_OBJS;
-		i_status=this.openConnect();		// инициируем объекты и устанавливаем связ с хостом
+		i_status=this.openConnect();			// инициируем объекты и устанавливаем связ с хостом
 		if (i_status!=this.msgToSend.cl.OK){
 			i_status=this.closeConnect();
 			return i_status;
@@ -273,19 +274,28 @@ public class Client {
 	 */
 	public int syncMode() throws UnknownHostException, IOException {
 		String line;
+		char[]chars=new char[MAX_BUF];
 		int i_status=this.msgToSend.cl.OK;
+		int len_buf;
+
 		try {
 			this.toServer.println(msgToSend.getSMessage());    // отправил в порт
-			line = fromServer.readLine();                		// получим ответ
-			i_status = msgToSend.parser(line);            		// разберем строку по переменным NodeStructure
-			if (i_status == msgToSend.cl.ERR_FUNC) {        	// отработка ошибки
-				errMessage = "Ошибка: " + msgToSend.errMessage;
+			len_buf=fromServer.read(chars, 0, MAX_BUF);      // получим ответ
+			if (len_buf > 0) {
+				line = new String(chars, 0, len_buf);
+				i_status = msgToSend.parser(line);                   // разберем строку по переменным NodeStructure
+			}
+			else
+				i_status=msgToSend.cl.READ_SOCKET_FAIL;
+			if (i_status == msgToSend.cl.ERR_FUNC ||
+					i_status == msgToSend.cl.READ_SOCKET_FAIL) {        		// отработка ошибки
+				errMessage = "Error: " + msgToSend.cl.errMessage(i_status);
 				this.printMessage(errMessage, PLCGlobals.ERROR);
 				return i_status;
 			}
 			if (msgToSend.getICodeAnswer() == msgToSend.cl.ERR) {
 				i_status=msgToSend.cl.ERR;
-				errMessage = "Ошибка: " + msgToSend.cl.errMessage(i_status);
+				errMessage = "Error: " + msgToSend.cl.errMessage(i_status);
 				this.printMessage(errMessage, PLCGlobals.ERROR);
 				return i_status;
 			}
@@ -301,6 +311,9 @@ public class Client {
 			msgToSend.errMessage="Ошибка:"+e.getMessage();
 			this.printMessage(errMessage,PLCGlobals.ERROR);
 			i_status=msgToSend.code_status;
+		}
+		finally {
+			this.closeConnect();
 		}
 		return i_status;
 	}

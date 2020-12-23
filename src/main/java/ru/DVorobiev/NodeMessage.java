@@ -39,28 +39,30 @@ public class NodeMessage {
             String[] parse_string = s_str.split(";");
             int i=0;
             for (String item: parse_string){
-                switch (i){
-                    case 0:
-                        i_idNode= Integer.parseInt(item);
-                        break;
-                    case 1:
-                        i_codeCommand= Integer.parseInt(item);
-                        break;
-                    case 2:
-                        i_code_answer= Integer.parseInt(item);
-                        break;
-                    case 3:
-                        h_idObj=Integer.parseInt(item);
-                        break;
-                    case 4:
-                        h_idSubObj=Integer.parseInt(item);
-                        break;
-                    case 5:
-                        i_typeData=Integer.parseInt(item);
-                        break;
-                    case 6:
-                        d_value=Double.parseDouble(item);
-                        break;
+                if (item.length()>0) {
+                    switch (i) {
+                        case 0:
+                            i_idNode = Integer.parseInt(item);
+                            break;
+                        case 1:
+                            i_codeCommand = Integer.parseInt(item);
+                            break;
+                        case 2:
+                            i_code_answer = Integer.parseInt(item);
+                            break;
+                        case 3:
+                            h_idObj = Integer.parseInt(item);
+                            break;
+                        case 4:
+                            h_idSubObj = Integer.parseInt(item);
+                            break;
+                        case 5:
+                            i_typeData = Integer.parseInt(item);
+                            break;
+                        case 6:
+                            d_value = Double.parseDouble(item);
+                            break;
+                    }
                 }
                 i++;
             }

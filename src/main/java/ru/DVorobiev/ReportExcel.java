@@ -79,7 +79,7 @@ public class ReportExcel {
         cell.setCellValue("valueSource");
         cell.setCellStyle(style);
         // Value
-        cell = row.createCell(3, CellType.STRING);
+        cell = row.createCell(4, CellType.STRING);
         cell.setCellValue("value");
         cell.setCellStyle(style);
 
