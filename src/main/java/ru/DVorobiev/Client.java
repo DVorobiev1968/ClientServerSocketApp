@@ -71,6 +71,20 @@ public class Client {
 		i_status= sendCommand(msgToSend.cl.CODE_FIND_NODES);
 		return i_status;
 	}
+	/**
+	 * метод для поиска информации по узлу в синхронном режиме, в случае еслли узел завязан на алгоритме
+	 * @param id_node : номер узла
+	 * @param id_obj : номер объекта
+	 * @return i_status: код ошибки
+	 */
+	public int findNodeObjSync(int id_node, int id_obj) throws IOException {
+		int i_status;
+		msgToSend.setIIdNode(id_node);
+		msgToSend.setHIdObj(id_obj);
+		msgToSend.setSMessage();			// сфоруем телеграмму на посылку данных
+		i_status= sendCommand(msgToSend.cl.CODE_FIND_NODES_SYNC);
+		return i_status;
+	}
 
 	/**
 	 * метод для вывода содержимого хранилища применяется для отладки

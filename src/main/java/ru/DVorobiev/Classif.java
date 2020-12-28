@@ -3,7 +3,7 @@ package ru.DVorobiev;
 import java.util.*;
 
 public class Classif {
-    private HashMap<Integer, String> states = new HashMap<Integer, String>();
+    private final HashMap<Integer, String> states = new HashMap<Integer, String>();
     final public int OK=80;
     // коды ошибок
     final public int SEARCH_FAIL = 78;
@@ -17,7 +17,9 @@ public class Classif {
     final public int ERR_FUNC=-1;
     final public int READ_SOCKET_FAIL=68;
     final public int READ_SOCKET_OK=69;
-
+    final public int SET_ALGORITM_VAL_OK=52;
+    final public int SET_ALGORITM_VAL_FAIL=51;
+    final public int SET_ALGORITM_WAIT=55;
 
     // коды комманд
     final public int CODE_START=1;
@@ -27,8 +29,9 @@ public class Classif {
     final public int CODE_SINGLE_START_ASYNC = 5;
     final public int CODE_LIST_NODES = 10;
     final public int CODE_FIND_NODES=11;
-    final public int CODE_LOAD_FOR_ALGORITM = 12;
-    final public int CODE_SAVE_FOR_ALGORITM = 13;
+    final public int CODE_FIND_NODES_SYNC = 12;
+    final public int CODE_LOAD_FOR_ALGORITM = 13;
+    final public int CODE_SAVE_FOR_ALGORITM = 14;
     final public int CODE_EXIT = 20;
     final public int CODE_EXIT_SERVER = 21;
 
@@ -42,6 +45,7 @@ public class Classif {
         states.put(CODE_SINGLE_START_ASYNC, "Single start command no wait synchronisation with FB");
         states.put(CODE_LIST_NODES, "Printing nodes list");
         states.put(CODE_FIND_NODES, "Search nodes and objext");
+        states.put(CODE_FIND_NODES_SYNC, "Search nodes and objext synchronisation with FB");
         states.put(CODE_LOAD_FOR_ALGORITM, "Search nodes and objext and load data of node for Algoritm");
         states.put(CODE_SAVE_FOR_ALGORITM, "Save data from Algoritm");
         states.put(CODE_EXIT, "Close connect Client stopped");
@@ -55,6 +59,10 @@ public class Classif {
         states.put(READ_SOCKET_OK, "Data read from socket it`s OK");
         states.put(SEARCH_FAIL, "Node and object not found");
         states.put(SEARCH_OK, "Node and object found OK");
+        states.put(SET_ALGORITM_VAL_OK, "Algoritm calculate completed");
+        states.put(SET_ALGORITM_VAL_FAIL,"Algoritm calculate it`s fail");
+        states.put(SET_ALGORITM_WAIT,"Wait for Algoritm calculated...");
+
         states.put(ERR, "General error");
         states.put(100, "Request not supported.");
         states.put(SYNTAX_ERR, "Syntax error.");

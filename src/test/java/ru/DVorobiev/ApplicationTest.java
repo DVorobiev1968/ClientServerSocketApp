@@ -98,7 +98,7 @@ public class ApplicationTest
         int i_status;
 
         long start = System.currentTimeMillis();
-        i_status=client.sendNode(11,0x1000, 100.00000001,client.msgToSend.cl.CODE_SINGLE_START);
+        i_status=client.sendNode(1,0x1000, 100.00000001,client.msgToSend.cl.CODE_SINGLE_START);
         if (i_status==client.msgToSend.cl.OK) {
             i_idNode = client.msgToSend.getIIdNode();
             h_idObj = client.msgToSend.getHIdObj();
@@ -137,6 +137,40 @@ public class ApplicationTest
             System.out.print(s_temp);
         }
 //        client.exitSession();
+        long time = System.currentTimeMillis() - start;
+        double ms=(double) (time/1000);
+        s_message=String.format("Test test_send_node time: %4.6f(sec.) %d(ms)",ms,time);
+        System.out.println(s_message);
+    }
+    /**
+     * Тест на создание узла с записью значения в синхронном режиме
+     * Результат сохраняется в классе msgToSend
+     * метод getNodeInfo выводит информацию в удобном виде
+     */
+    @Test
+    public void perfomanceSendNodeSync() throws IOException {
+        Client client = new Client();
+        int i_idNode;		// идентификатор узла
+        int i_codeCommand;	// код команды присваивается в зависимости от протокола работы узла
+        int i_code_answer;	// код ответа от узла
+        int h_idObj;		// идентификатор объекта
+        int h_idSubObj;		// идентификатор субобъекта
+        int i_typeData;		// тип данных объекта
+        String s_command;	// команда
+        String s_message;	// строка получаемая из буфера
+        double d_value;     // возвращаемое значение
+        String s_temp;
+        int i_status;
+
+        long start = System.currentTimeMillis();
+        i_status=client.sendNode(1,0x1000, 100.00000001,client.msgToSend.cl.CODE_SINGLE_START_SYNC);
+        if (i_status==client.msgToSend.cl.OK) {
+            System.out.print(client.msgToSend.getNodeInfo());
+        }
+        else {
+            s_temp=String.format("Error code:%d (%s)\n",i_status,client.errMessage);
+            System.out.print(s_temp);
+        }
         long time = System.currentTimeMillis() - start;
         double ms=(double) (time/1000);
         s_message=String.format("Test test_send_node time: %4.6f(sec.) %d(ms)",ms,time);
@@ -234,6 +268,23 @@ public class ApplicationTest
 
         long start = System.currentTimeMillis();
         client.findNodeObj(11,0x1000);
+        System.out.print(client.msgToSend.getNodeInfo());
+        long time = System.currentTimeMillis() - start;
+        System.out.println("Test findNodeObj time (ms): " + time);
+    }
+
+    /**
+     * Тест на поиск узла в синхронном режиме,
+     * т.е. ожидаем плявления данных от Алгоритма
+     * Результат сохраняется в классе msgToSend
+     * метод getNodeInfo выводит информацию в удобном виде
+     */
+    @Test
+    public void perfomanceFindNodeObjSync() throws IOException {
+        Client client = new Client();
+
+        long start = System.currentTimeMillis();
+        client.findNodeObjSync(1,0x1000);
         System.out.print(client.msgToSend.getNodeInfo());
         long time = System.currentTimeMillis() - start;
         System.out.println("Test findNodeObj time (ms): " + time);
@@ -367,7 +418,7 @@ public class ApplicationTest
     public void debugSendNodeValue() throws IOException, InterruptedException {
         Classif classif=new Classif();
         long t;
-        t=100;
+        t=50;
         TestSendNode(1, 0x1000,400,"values",classif.CODE_SINGLE_START,t);
     }
 
