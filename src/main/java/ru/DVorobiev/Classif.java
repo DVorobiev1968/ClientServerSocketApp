@@ -34,6 +34,7 @@ public class Classif {
     final public int CODE_SAVE_FOR_ALGORITM = 14;
     final public int CODE_EXIT = 20;
     final public int CODE_EXIT_SERVER = 21;
+    final public int CODE_ALGORITM_OPERATION = 50;
 
     Classif()
     {
@@ -50,6 +51,7 @@ public class Classif {
         states.put(CODE_SAVE_FOR_ALGORITM, "Save data from Algoritm");
         states.put(CODE_EXIT, "Close connect Client stopped");
         states.put(CODE_EXIT_SERVER, "Close connect Server stopped");
+        states.put(CODE_ALGORITM_OPERATION, "Codes Error/Info for Algoritm");
         states.put(UNKNOW_HOST,"UnknownHostException");
         states.put(RESET_HOST, "The program on your host computer dropped the established connection");
         states.put(ERR_CLOSE_CONNECT, "Error close connection");
@@ -62,7 +64,6 @@ public class Classif {
         states.put(SET_ALGORITM_VAL_OK, "Algoritm calculate completed");
         states.put(SET_ALGORITM_VAL_FAIL,"Algoritm calculate it`s fail");
         states.put(SET_ALGORITM_WAIT,"Wait for Algoritm calculated...");
-
         states.put(ERR, "General error");
         states.put(100, "Request not supported.");
         states.put(SYNTAX_ERR, "Syntax error.");

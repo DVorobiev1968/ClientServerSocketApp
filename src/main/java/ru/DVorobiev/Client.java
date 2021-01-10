@@ -72,17 +72,24 @@ public class Client {
 		return i_status;
 	}
 	/**
-	 * метод для поиска информации по узлу в синхронном режиме, в случае еслли узел завязан на алгоритме
+	 * метод для поиска информации по узлу в синхронном режиме, в случае если узел завязан на алгоритм
+	 * пока сервер не ответит что Алгоритм завершен будем ждать ответа
 	 * @param id_node : номер узла
 	 * @param id_obj : номер объекта
 	 * @return i_status: код ошибки
 	 */
-	public int findNodeObjSync(int id_node, int id_obj) throws IOException {
+	public int findNodeObjSync(int id_node, int id_obj) throws IOException, InterruptedException {
 		int i_status;
+		int i_codeAnswer;
 		msgToSend.setIIdNode(id_node);
 		msgToSend.setHIdObj(id_obj);
 		msgToSend.setSMessage();			// сфоруем телеграмму на посылку данных
-		i_status= sendCommand(msgToSend.cl.CODE_FIND_NODES_SYNC);
+		do {
+			i_status=sendCommand(msgToSend.cl.CODE_FIND_NODES_SYNC);
+			i_codeAnswer=msgToSend.getICodeAnswer();
+			Thread.sleep(20);
+		}while (i_codeAnswer==msgToSend.cl.SET_ALGORITM_WAIT);
+
 		return i_status;
 	}
 

@@ -98,7 +98,7 @@ public class ApplicationTest
         int i_status;
 
         long start = System.currentTimeMillis();
-        i_status=client.sendNode(1,0x1000, 100.00000001,client.msgToSend.cl.CODE_SINGLE_START);
+        i_status=client.sendNode(1,0x1000, 0.02,client.msgToSend.cl.CODE_SINGLE_START);
         if (i_status==client.msgToSend.cl.OK) {
             i_idNode = client.msgToSend.getIIdNode();
             h_idObj = client.msgToSend.getHIdObj();
@@ -163,7 +163,7 @@ public class ApplicationTest
         int i_status;
 
         long start = System.currentTimeMillis();
-        i_status=client.sendNode(1,0x1000, 100.00000001,client.msgToSend.cl.CODE_SINGLE_START_SYNC);
+        i_status=client.sendNode(1,0x1000, 1.02,client.msgToSend.cl.CODE_SINGLE_START_SYNC);
         if (i_status==client.msgToSend.cl.OK) {
             System.out.print(client.msgToSend.getNodeInfo());
         }
@@ -267,7 +267,7 @@ public class ApplicationTest
         Client client = new Client();
 
         long start = System.currentTimeMillis();
-        client.findNodeObj(11,0x1000);
+        client.findNodeObj(1,0x1000);
         System.out.print(client.msgToSend.getNodeInfo());
         long time = System.currentTimeMillis() - start;
         System.out.println("Test findNodeObj time (ms): " + time);
@@ -280,10 +280,11 @@ public class ApplicationTest
      * метод getNodeInfo выводит информацию в удобном виде
      */
     @Test
-    public void perfomanceFindNodeObjSync() throws IOException {
+    public void perfomanceFindNodeObjSync() throws IOException, InterruptedException {
         Client client = new Client();
 
         long start = System.currentTimeMillis();
+        client.debug=PLCGlobals.WARNING;
         client.findNodeObjSync(1,0x1000);
         System.out.print(client.msgToSend.getNodeInfo());
         long time = System.currentTimeMillis() - start;
@@ -355,8 +356,8 @@ public class ApplicationTest
      * Функция для отладки, предназначена для посылки значения на узел указанный узел, объект, кол-во иттераций.
      * Посылаемое технологическое значение  является функцией sin от угла в диапазоне от 0-360 градусов.
      * Одна иттерация это изменение аргумента sin(), на 1 градус.
-     * Предусмотрено использование отладка работы алгортмов для этого опрашивается
-     * соседний объект (id_Obj+1) в котором должно записываться рассчитанное алгоритмом значение.
+     * Предусмотрено использование отладка работы алгоритмов для этого опрашивается
+     * соседний узел (id_Node+1) в котором должно записываться рассчитанное алгоритмом значение.
      * Паараметр для синхронизации с алгоритмом timeout, предназначен для задержки повторного
      * имитационного сигнала.
      * Для ускорения вывод отладочных сообщений установлен на уровне WARNING
@@ -393,7 +394,7 @@ public class ApplicationTest
             i_status=client.sendNode(id_Node,id_Obj, d_value,i_command);
             if (i_status!=client.msgToSend.cl.OK)
                 break;
-            i_status=client.findNodeObj(id_Node,id_Obj+1);
+            i_status=client.findNodeObjSync(id_Node+1,id_Obj);
             if (i_status!=client.msgToSend.cl.OK)
                 break;
             DataSignal dataSignal=new DataSignal(id_Node,id_Obj,d_value,client.msgToSend.getDValue());
@@ -431,7 +432,7 @@ public class ApplicationTest
     @Test
     public void perfomanceSendNodeValue() throws IOException, InterruptedException {
         Classif classif=new Classif();
-        TestSendNode(1, 0x1000,400,"values",classif.CODE_SINGLE_START,0);
+        TestSendNode(1, 0x1000,100,"values",classif.CODE_SINGLE_START,0);
     }
     /**
      * Тест для проверки производителности работы Сервера,
@@ -445,7 +446,7 @@ public class ApplicationTest
     @Test
     public void perfomanceSendNodeValueSync() throws IOException, InterruptedException {
         Classif classif=new Classif();
-        TestSendNode(1, 0x1000+7,400,"ValuesSinc",classif.CODE_SINGLE_START_SYNC,0);
+        TestSendNode(1, 0x1000,2,"ValuesSinc",classif.CODE_SINGLE_START,0);
     }
     /**
      * Тест для проверки производителности работы Сервера, тоже что и
