@@ -275,7 +275,7 @@ public class ApplicationTest
 
     /**
      * Тест на поиск узла в синхронном режиме,
-     * т.е. ожидаем плявления данных от Алгоритма
+     * т.е. ожидаем появления данных от Алгоритма
      * Результат сохраняется в классе msgToSend
      * метод getNodeInfo выводит информацию в удобном виде
      */
@@ -358,7 +358,7 @@ public class ApplicationTest
      * Одна иттерация это изменение аргумента sin(), на 1 градус.
      * Предусмотрено использование отладка работы алгоритмов для этого опрашивается
      * соседний узел (id_Node+1) в котором должно записываться рассчитанное алгоритмом значение.
-     * Паараметр для синхронизации с алгоритмом timeout, предназначен для задержки повторного
+     * Параметр для синхронизации с алгоритмом timeout, предназначен для задержки повторного
      * имитационного сигнала.
      * Для ускорения вывод отладочных сообщений установлен на уровне WARNING
 
@@ -394,7 +394,7 @@ public class ApplicationTest
             i_status=client.sendNode(id_Node,id_Obj, d_value,i_command);
             if (i_status!=client.msgToSend.cl.OK)
                 break;
-            i_status=client.findNodeObjSync(id_Node+1,id_Obj);
+            i_status=client.findNodeObjSync(id_Node,id_Obj);
             if (i_status!=client.msgToSend.cl.OK)
                 break;
             DataSignal dataSignal=new DataSignal(id_Node,id_Obj,d_value,client.msgToSend.getDValue());
@@ -404,6 +404,60 @@ public class ApplicationTest
         }
         long time = System.currentTimeMillis() - start;
         errMessage=String.format("Test test_send_node time: %d(ms)",time);
+        reportExcel.CreateReport();
+        System.out.println(errMessage);
+        System.out.println(reportExcel.errMessage);
+    }
+    /**
+     * Функция для отладки, предназначена для посылки значения на узел указанный узел, объект, кол-во иттераций.
+     * Посылаемое технологическое значение  является функцией sin от угла в диапазоне от 0-360 градусов.
+     * Одна иттерация это изменение аргумента sin(), на 1 градус.
+     * Предусмотрено использование отладка работы алгоритмов для этого опрашивается
+     * соседний узел (id_Node+1) в котором должно записываться рассчитанное алгоритмом значение.
+     * Параметр для синхронизации с алгоритмом timeout, предназначен для задержки повторного
+     * имитационного сигнала.
+     * Для ускорения вывод отладочных сообщений установлен на уровне WARNING
+
+     * То же что и test_send_node, но выводит результат в файл ./*.xls
+     * @param id_Node: идентификатор узла
+     * @param id_Obj: идентификатор объекта
+     * @param n_itteration: кол-во иттераций синхронной передачи данных на сервер
+     * @param name_sheet: наименования листа рабочей книги
+     * @param i_command: код команды
+     * @param timeout: интервал для синхронизации в мс
+     * @throws IOException: исключение ввода/вывода
+     * @throws InterruptedException: исключение прерывания
+     */
+    public static void TestSendNode_1(int id_Node, int id_Obj, int n_itteration, String name_sheet, int i_command, long timeout) throws IOException, InterruptedException {
+        Client client = new Client();
+        ReportExcel reportExcel=new ReportExcel(name_sheet);
+
+        double d_value=0.0, d_value_1=0.0;
+
+        client.debug=2;         // для ускорения выставляем уровень WARNING
+        String errMessage;
+        int i_status;
+
+        long start = System.currentTimeMillis();
+        errMessage=String.format("Starting test test_send_node for Node: %d/%d, %d-itteration",
+                id_Node,id_Obj,n_itteration);
+        System.out.println(errMessage);
+        for(int i=0; i<=n_itteration;i++){
+            i_status=client.sendNode(id_Node,id_Obj, d_value,i_command);
+            if (i_status!=client.msgToSend.cl.OK)
+                break;
+            i_status=client.findNodeObjSync(id_Node,id_Obj);
+            if (i_status!=client.msgToSend.cl.OK)
+                break;
+            d_value_1=client.msgToSend.getDValue();
+            DataSignal dataSignal=new DataSignal(id_Node,id_Obj,d_value,d_value_1);
+            d_value=d_value_1;
+            reportExcel.list.add(dataSignal);
+            if (timeout>0)
+                Thread.sleep(timeout);
+        }
+        long time = System.currentTimeMillis() - start;
+        errMessage=String.format("Test TestSendNode_1 time: %d(ms)",time);
         reportExcel.CreateReport();
         System.out.println(errMessage);
         System.out.println(reportExcel.errMessage);
@@ -446,7 +500,8 @@ public class ApplicationTest
     @Test
     public void perfomanceSendNodeValueSync() throws IOException, InterruptedException {
         Classif classif=new Classif();
-        TestSendNode(1, 0x1000,2,"ValuesSinc",classif.CODE_SINGLE_START,0);
+//        TestSendNode(1, 0x1000,1,"ValuesSinc",classif.CODE_SINGLE_START_SYNC,0);
+        TestSendNode_1(1, 0x1000,100,"ValuesSinc",classif.CODE_SINGLE_START_SYNC,0);
     }
     /**
      * Тест для проверки производителности работы Сервера, тоже что и
