@@ -269,6 +269,8 @@ public class ApplicationTest
         long start = System.currentTimeMillis();
         client.findNodeObj(1,0x1000);
         System.out.print(client.msgToSend.getNodeInfo());
+        client.findNodeObj(1+1,0x1000);
+        System.out.print(client.msgToSend.getNodeInfo());
         long time = System.currentTimeMillis() - start;
         System.out.println("Test findNodeObj time (ms): " + time);
     }
@@ -376,14 +378,14 @@ public class ApplicationTest
         Client client = new Client();
         ReportExcel reportExcel=new ReportExcel(name_sheet);
 
-        double d_value;
+        double d_value, d_value_src;
         double radian;
         client.debug=2;         // для ускорения выставляем уровень WARNING
         String errMessage;
         int i_status;
 
         long start = System.currentTimeMillis();
-        errMessage=String.format("Starting test test_send_node for Node: %d/%d, %d-itteration",
+        errMessage=String.format("Starting test TestSendNode for Node: %d/%d, %d-itteration",
                 id_Node,id_Obj,n_itteration);
         System.out.println(errMessage);
         for(int i=0, grad=0; i<=n_itteration;i++, grad++){
@@ -394,16 +396,20 @@ public class ApplicationTest
             i_status=client.sendNode(id_Node,id_Obj, d_value,i_command);
             if (i_status!=client.msgToSend.cl.OK)
                 break;
-            i_status=client.findNodeObjSync(id_Node,id_Obj);
+            else
+                d_value=client.msgToSend.getDValue();
+            i_status=client.findNodeObjSync(id_Node+1,id_Obj);
+            d_value_src=client.msgToSend.getDValue();
             if (i_status!=client.msgToSend.cl.OK)
                 break;
-            DataSignal dataSignal=new DataSignal(id_Node,id_Obj,d_value,client.msgToSend.getDValue());
+
+            DataSignal dataSignal=new DataSignal(id_Node,id_Obj,d_value_src,d_value);
             reportExcel.list.add(dataSignal);
             if (timeout>0)
                 Thread.sleep(timeout);
         }
         long time = System.currentTimeMillis() - start;
-        errMessage=String.format("Test test_send_node time: %d(ms)",time);
+        errMessage=String.format("Test TestSendNode time: %d(ms)",time);
         reportExcel.CreateReport();
         System.out.println(errMessage);
         System.out.println(reportExcel.errMessage);
@@ -439,22 +445,22 @@ public class ApplicationTest
         int i_status;
 
         long start = System.currentTimeMillis();
-        errMessage=String.format("Starting test test_send_node for Node: %d/%d, %d-itteration",
+        errMessage=String.format("Starting test TestSendNode_1 for Node: %d/%d, %d-itteration",
                 id_Node,id_Obj,n_itteration);
         System.out.println(errMessage);
-        for(int i=0; i<=n_itteration;i++){
-            i_status=client.sendNode(id_Node,id_Obj, d_value,i_command);
-            if (i_status!=client.msgToSend.cl.OK)
-                break;
-            i_status=client.findNodeObjSync(id_Node,id_Obj);
-            if (i_status!=client.msgToSend.cl.OK)
-                break;
-            d_value_1=client.msgToSend.getDValue();
-            DataSignal dataSignal=new DataSignal(id_Node,id_Obj,d_value,d_value_1);
-            d_value=d_value_1;
-            reportExcel.list.add(dataSignal);
-            if (timeout>0)
-                Thread.sleep(timeout);
+        i_status=client.sendNode(id_Node,id_Obj, d_value,i_command);
+        if (i_status==client.msgToSend.cl.OK) {
+            for (int i = 0; i <= n_itteration; i++) {
+                i_status = client.findNodeObjSync(id_Node, id_Obj);
+                if (i_status != client.msgToSend.cl.OK)
+                    break;
+                d_value_1 = client.msgToSend.getDValue();
+                DataSignal dataSignal = new DataSignal(id_Node, id_Obj, d_value, d_value_1);
+                d_value = d_value_1;
+                reportExcel.list.add(dataSignal);
+                if (timeout > 0)
+                    Thread.sleep(timeout);
+            }
         }
         long time = System.currentTimeMillis() - start;
         errMessage=String.format("Test TestSendNode_1 time: %d(ms)",time);
@@ -500,8 +506,8 @@ public class ApplicationTest
     @Test
     public void perfomanceSendNodeValueSync() throws IOException, InterruptedException {
         Classif classif=new Classif();
-//        TestSendNode(1, 0x1000,1,"ValuesSinc",classif.CODE_SINGLE_START_SYNC,0);
-        TestSendNode_1(1, 0x1000,100,"ValuesSinc",classif.CODE_SINGLE_START_SYNC,0);
+        TestSendNode(1, 0x1000,10,"ValuesSinc",classif.CODE_SINGLE_START_SYNC,0);
+//        TestSendNode_1(1, 0x1000,10000,"ValuesSinc",classif.CODE_LOAD_FOR_ALGORITM,0);
     }
     /**
      * Тест для проверки производителности работы Сервера, тоже что и
