@@ -289,6 +289,8 @@ public class ApplicationTest
         client.debug=PLCGlobals.WARNING;
         client.findNodeObjSync(1,0x1000);
         System.out.print(client.msgToSend.getNodeInfo());
+        client.findNodeObjSync(2,0x1000);
+        System.out.print(client.msgToSend.getNodeInfo());
         long time = System.currentTimeMillis() - start;
         System.out.println("Test findNodeObj time (ms): " + time);
     }
@@ -392,20 +394,27 @@ public class ApplicationTest
             if (grad > 360)
                 grad=0;
             radian=Math.toRadians(grad);
-            d_value=Math.sin(radian);
-            i_status=client.sendNode(id_Node,id_Obj, d_value,i_command);
-            if (i_status!=client.msgToSend.cl.OK)
+            d_value_src=Math.sin(radian);
+            i_status=client.sendNode(id_Node,id_Obj, d_value_src,i_command);
+            if (i_status!=client.msgToSend.cl.OK) {
+                Thread.sleep(20);
                 break;
-            else
-                d_value=client.msgToSend.getDValue();
-            i_status=client.findNodeObjSync(id_Node+1,id_Obj);
-            d_value_src=client.msgToSend.getDValue();
-            if (i_status!=client.msgToSend.cl.OK)
-                break;
-
-            DataSignal dataSignal=new DataSignal(id_Node,id_Obj,d_value_src,d_value);
-            reportExcel.list.add(dataSignal);
-            if (timeout>0)
+            }
+            else {
+                Thread.sleep(40);
+                d_value_src = client.msgToSend.getDValue();
+                i_status = client.findNodeObjSync(id_Node + 1, id_Obj);
+                d_value = client.msgToSend.getDValue();
+                if (i_status != client.msgToSend.cl.OK){
+                    Thread.sleep(20);
+                    break;
+                }
+                else {
+                    DataSignal dataSignal = new DataSignal(id_Node, id_Obj, d_value, d_value_src);
+                    reportExcel.list.add(dataSignal);
+                }
+            }
+            if (timeout > 0)
                 Thread.sleep(timeout);
         }
         long time = System.currentTimeMillis() - start;
@@ -506,7 +515,7 @@ public class ApplicationTest
     @Test
     public void perfomanceSendNodeValueSync() throws IOException, InterruptedException {
         Classif classif=new Classif();
-        TestSendNode(1, 0x1000,10,"ValuesSinc",classif.CODE_SINGLE_START_SYNC,0);
+        TestSendNode(1, 0x1000,1000,"ValuesSinc",classif.CODE_SINGLE_START_SYNC,0);
 //        TestSendNode_1(1, 0x1000,10000,"ValuesSinc",classif.CODE_LOAD_FOR_ALGORITM,0);
     }
     /**
