@@ -4,10 +4,11 @@ import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-import java.util.TimeZone;
 
 public class DataSignal {
     private Date date;
+    private long time;
+
     private int id_Node;
     private int id_Obj;
     private Double d_value;
@@ -23,47 +24,31 @@ public class DataSignal {
         this.id_Node=id_Node;
         this.id_Obj=id_Obj;
         this.date = new Date();
+        this.time=this.date.getTime();
         this.d_value = d_value;
         this.d_valueSource=d_valueSource;
     }
 
-    public int getId_Node() {
-        return id_Node;
-    }
-
-    public void setId_Node(int id_Node) {
-        this.id_Node = id_Node;
-    }
-
-    public int getId_Obj() {
-        return id_Obj;
-    }
-
-    public void setId_Obj(int id_Obj) {
-        this.id_Obj = id_Obj;
-    }
-
-    public Date getDate() {
-        return date;
-    }
-    public void setDate(Date date) {
-        this.date = date;
-    }
-
-    public Double getD_value() {
-        return d_value;
-    }
-
+    public int getId_Node() {return id_Node; }
+    public void setId_Node(int id_Node) {this.id_Node = id_Node; }
+    public int getId_Obj() { return id_Obj; }
+    public void setId_Obj(int id_Obj) { this.id_Obj = id_Obj; }
+    public Date getDate() {return date;}
+    public void setDate(Date date) {this.date = date; }
+    public Double getD_value() {return d_value;}
     public void setD_value(Double d_value) {
         this.d_value = d_value;
     }
-
     public Double getD_valueSource() {
         return d_valueSource;
     }
-
-    public void setD_valueSource(Double d_valueSource) {
+    public void setD_valueSource(Double d_valueSource)
+    {
         this.d_valueSource = d_valueSource;
+    }
+    public long getTime() {return this.time; }
+    public void setTime(long time) {
+        this.time = time;
     }
 
     /**
@@ -97,7 +82,10 @@ public class DataSignal {
      * @return String: строка дата время с учетом Locale
      */
     public String getStringDate(Date date) {
-        String s_date;
+        String s_date, s_time;
+        String pattern;
+
+        SimpleDateFormat simpleDateFormat;
         Locale locale = new Locale("ru", "RU");
         DateFormatSymbols dateFormatSymbols = new DateFormatSymbols(locale);
         dateFormatSymbols.setWeekdays(new String[]{
@@ -111,10 +99,15 @@ public class DataSignal {
                 "Воскресенье"
         });
 
-        String pattern = "dd/MM/yyyy HH:mm:ss.SSS";
-        SimpleDateFormat simpleDateFormat =
-                new SimpleDateFormat(pattern, dateFormatSymbols);
+        pattern = "dd/MM/yyyy";
+        simpleDateFormat = new SimpleDateFormat(pattern, dateFormatSymbols);
         s_date = simpleDateFormat.format(date);
+        this.setDate(new Date(s_date));
+
+        pattern = "dd/MM/yyyy HH:mm:ss.SSS";
+        simpleDateFormat = new SimpleDateFormat(pattern, dateFormatSymbols);
+        s_date = simpleDateFormat.format(date);
+        this.setTime(date.getTime());
         return s_date;
     }
 }

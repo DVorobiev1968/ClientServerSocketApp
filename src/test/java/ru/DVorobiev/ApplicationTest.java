@@ -98,7 +98,7 @@ public class ApplicationTest
         int i_status;
 
         long start = System.currentTimeMillis();
-        i_status=client.sendNode(1,0x1000, 0.02,client.msgToSend.cl.CODE_SINGLE_START);
+        i_status=client.sendNode(1,0x1000, 2.0000000002,client.msgToSend.cl.CODE_SINGLE_START);
         if (i_status==client.msgToSend.cl.OK) {
             i_idNode = client.msgToSend.getIIdNode();
             h_idObj = client.msgToSend.getHIdObj();
@@ -163,7 +163,7 @@ public class ApplicationTest
         int i_status;
 
         long start = System.currentTimeMillis();
-        i_status=client.sendNode(1,0x1000, 1.02,client.msgToSend.cl.CODE_SINGLE_START_SYNC);
+        i_status=client.sendNode(1,0x1000, 1.0000000002,client.msgToSend.cl.CODE_SINGLE_START_SYNC);
         if (i_status==client.msgToSend.cl.OK) {
             System.out.print(client.msgToSend.getNodeInfo());
         }
@@ -172,8 +172,7 @@ public class ApplicationTest
             System.out.print(s_temp);
         }
         long time = System.currentTimeMillis() - start;
-        double ms=(double) (time/1000);
-        s_message=String.format("Test test_send_node time: %4.6f(sec.) %d(ms)",ms,time);
+        s_message=String.format("Test test_send_node time: %d(ms)",time);
         System.out.println(s_message);
     }
 

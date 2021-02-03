@@ -66,20 +66,24 @@ public class ReportExcel {
         cell = row.createCell(0, CellType.STRING);
         cell.setCellValue("DataTime");
         cell.setCellStyle(style);
-        // Id_Node
+        //miliseconds
         cell = row.createCell(1, CellType.STRING);
+        cell.setCellValue("ms");
+        cell.setCellStyle(style);
+        // Id_Node
+        cell = row.createCell(2, CellType.STRING);
         cell.setCellValue("ID Node");
         cell.setCellStyle(style);
         // Id_Obj
-        cell = row.createCell(2, CellType.STRING);
+        cell = row.createCell(3, CellType.STRING);
         cell.setCellValue("ID Object");
         cell.setCellStyle(style);
         // Value
-        cell = row.createCell(3, CellType.STRING);
+        cell = row.createCell(4, CellType.STRING);
         cell.setCellValue("valueSource");
         cell.setCellStyle(style);
         // Value
-        cell = row.createCell(4, CellType.STRING);
+        cell = row.createCell(5, CellType.STRING);
         cell.setCellValue("value");
         cell.setCellStyle(style);
 
@@ -90,12 +94,14 @@ public class ReportExcel {
             cell = row.createCell(0, CellType.STRING);
             cell.setCellValue(item.getStringDate(item.getDate()));
             cell = row.createCell(1, CellType.NUMERIC);
-            cell.setCellValue(item.getId_Node());
+            cell.setCellValue(item.getTime());
             cell = row.createCell(2, CellType.NUMERIC);
-            cell.setCellValue(item.getId_Obj());
+            cell.setCellValue(item.getId_Node());
             cell = row.createCell(3, CellType.NUMERIC);
-            cell.setCellValue(item.getD_valueSource());
+            cell.setCellValue(item.getId_Obj());
             cell = row.createCell(4, CellType.NUMERIC);
+            cell.setCellValue(item.getD_valueSource());
+            cell = row.createCell(5, CellType.NUMERIC);
             cell.setCellValue(item.getD_value());
         }
         if (rownum > 0) {
