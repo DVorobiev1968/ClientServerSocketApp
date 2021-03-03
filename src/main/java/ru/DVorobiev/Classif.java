@@ -7,73 +7,47 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class Classif {
     private static final HashMap<Integer, String> STATUSES = new HashMap<>();
-
-    public static final int OK = 80;
-    // коды ошибок
-    public static final int SEARCH_FAIL = 78;
-    public static final int SEARCH_OK = 79;
-    public static final int ERR_CLOSE_CONNECT = 95;
-    public static final int UNKNOW_HOST = 96;
-    public static final int RESET_HOST = 97;
-    public static final int B_MESSAGE_EMPTY = 98;
-    public static final int ERR = 99;
-    public static final int SYNTAX_ERR = 101;
-    public static final int ERR_FUNC = -1;
-    public static final int READ_SOCKET_FAIL = 68;
-    public static final int READ_SOCKET_OK = 69;
-    public static final int SET_ALGORITM_VAL_OK = 52;
-    public static final int SET_ALGORITM_VAL_FAIL = 51;
-    public static final int SET_ALGORITM_WAIT = 55;
-
-    // коды комманд
-    public static final int CODE_START = 1;
-    public static final int CODE_STOP = 2;
-    public static final int CODE_SINGLE_START = 3;
-    public static final int CODE_SINGLE_START_SYNC = 4;
-    public static final int CODE_SINGLE_START_ASYNC = 5;
-    public static final int CODE_LIST_NODES = 10;
-    public static final int CODE_FIND_NODES = 11;
-    public static final int CODE_FIND_NODES_SYNC = 12;
-    public static final int CODE_LOAD_FOR_ALGORITM = 13;
-    public static final int CODE_SAVE_FOR_ALGORITM = 14;
-    public static final int CODE_EXIT = 20;
-    public static final int CODE_EXIT_SERVER = 21;
-    public static final int CODE_ALGORITM_OPERATION = 50;
+    ErrorCode ERROR;
+    CommandCode COMMAND;
 
     static {
-        STATUSES.put(OK, "Command completed completely");
-        STATUSES.put(CODE_START, "Start command");
-        STATUSES.put(CODE_STOP, "Stop command");
-        STATUSES.put(CODE_SINGLE_START, "Single start command");
-        STATUSES.put(CODE_SINGLE_START_SYNC, "Single start command synchronisation with FB");
+        STATUSES.put(ERROR.OK, "Command completed completely");
+        STATUSES.put(COMMAND.CODE_START, "Start command");
+        STATUSES.put(COMMAND.CODE_STOP, "Stop command");
+        STATUSES.put(COMMAND.CODE_SINGLE_START, "Single start command");
         STATUSES.put(
-                CODE_SINGLE_START_ASYNC, "Single start command no wait synchronisation with FB");
-        STATUSES.put(CODE_LIST_NODES, "Printing nodes list");
-        STATUSES.put(CODE_FIND_NODES, "Search nodes and objext");
-        STATUSES.put(CODE_FIND_NODES_SYNC, "Search nodes and objext synchronisation with FB");
+                COMMAND.CODE_SINGLE_START_SYNC, "Single start command synchronisation with FB");
         STATUSES.put(
-                CODE_LOAD_FOR_ALGORITM,
+                COMMAND.CODE_SINGLE_START_ASYNC,
+                "Single start command no wait synchronisation with FB");
+        STATUSES.put(COMMAND.CODE_LIST_NODES, "Printing nodes list");
+        STATUSES.put(COMMAND.CODE_FIND_NODES, "Search nodes and objext");
+        STATUSES.put(
+                COMMAND.CODE_FIND_NODES_SYNC, "Search nodes and objext synchronisation with FB");
+        STATUSES.put(
+                COMMAND.CODE_LOAD_FOR_ALGORITM,
                 "Search nodes and objext and load data of node for Algoritm");
-        STATUSES.put(CODE_SAVE_FOR_ALGORITM, "Save data from Algoritm");
-        STATUSES.put(CODE_EXIT, "Close connect Client stopped");
-        STATUSES.put(CODE_EXIT_SERVER, "Close connect Server stopped");
-        STATUSES.put(CODE_ALGORITM_OPERATION, "Codes Error/Info for Algoritm");
-        STATUSES.put(UNKNOW_HOST, "UnknownHostException");
+        STATUSES.put(COMMAND.CODE_SAVE_FOR_ALGORITM, "Save data from Algoritm");
+        STATUSES.put(COMMAND.CODE_EXIT, "Close connect Client stopped");
+        STATUSES.put(COMMAND.CODE_EXIT_SERVER, "Close connect Server stopped");
+        STATUSES.put(COMMAND.CODE_ALGORITM_OPERATION, "Codes Error/Info for Algoritm");
+        STATUSES.put(ERROR.UNKNOW_HOST, "UnknownHostException");
         STATUSES.put(
-                RESET_HOST, "The program on your host computer dropped the established connection");
-        STATUSES.put(ERR_CLOSE_CONNECT, "Error close connection");
-        STATUSES.put(B_MESSAGE_EMPTY, "b_message it`s empty or Thread is done");
-        STATUSES.put(ERR_FUNC, "Error functions: ");
-        STATUSES.put(READ_SOCKET_FAIL, "Error read from socket");
-        STATUSES.put(READ_SOCKET_OK, "Data read from socket it`s OK");
-        STATUSES.put(SEARCH_FAIL, "Node and object not found");
-        STATUSES.put(SEARCH_OK, "Node and object found OK");
-        STATUSES.put(SET_ALGORITM_VAL_OK, "Algoritm calculate completed");
-        STATUSES.put(SET_ALGORITM_VAL_FAIL, "Algoritm calculate it`s fail");
-        STATUSES.put(SET_ALGORITM_WAIT, "Wait for Algoritm calculated...");
-        STATUSES.put(ERR, "General error");
+                ERROR.RESET_HOST,
+                "The program on your host computer dropped the established connection");
+        STATUSES.put(ERROR.ERR_CLOSE_CONNECT, "Error close connection");
+        STATUSES.put(ERROR.B_MESSAGE_EMPTY, "b_message it`s empty or Thread is done");
+        STATUSES.put(ERROR.ERR_FUNC, "Error functions: ");
+        STATUSES.put(ERROR.READ_SOCKET_FAIL, "Error read from socket");
+        STATUSES.put(ERROR.READ_SOCKET_OK, "Data read from socket it`s OK");
+        STATUSES.put(ERROR.SEARCH_FAIL, "Node and object not found");
+        STATUSES.put(ERROR.SEARCH_OK, "Node and object found OK");
+        STATUSES.put(ERROR.SET_ALGORITM_VAL_OK, "Algoritm calculate completed");
+        STATUSES.put(ERROR.SET_ALGORITM_VAL_FAIL, "Algoritm calculate it`s fail");
+        STATUSES.put(ERROR.SET_ALGORITM_WAIT, "Wait for Algoritm calculated...");
+        STATUSES.put(ERROR.ERR, "General error");
         STATUSES.put(100, "Request not supported.");
-        STATUSES.put(SYNTAX_ERR, "Syntax error.");
+        STATUSES.put(ERROR.SYNTAX_ERR, "Syntax error.");
         STATUSES.put(102, "Request not processed due to internal state.");
         STATUSES.put(103, "Time-out (where applicable).");
         STATUSES.put(104, "No default net set.");

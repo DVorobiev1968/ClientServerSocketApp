@@ -1,6 +1,5 @@
 package ru.dvorobiev;
 
-import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import ru.dvorobiev.model.DataSignal;
@@ -22,8 +21,8 @@ public class ApplicationTest {
         Client client = new Client(SERVER_HOST, SERVER_PORT);
 
         long start = System.currentTimeMillis();
-        int status = client.sendNode(1, 0x1000, 2.0000000002, Classif.CODE_SINGLE_START);
-        if (status == Classif.OK) {
+        int status = client.sendNode(1, 0x1000, 2.0000000002, CommandCode.CODE_SINGLE_START);
+        if (status == ErrorCode.OK) {
             String temp =
                     String.format(
                             "Node advanced information: \n"
@@ -48,19 +47,19 @@ public class ApplicationTest {
                             client.getMsgToSend().getDataType());
 
             // PRINT
-            log.info(temp);
+            client.customLoger(temp);
 
             // этот же результат но с использованием функции вывода информауии об узле
-            log.info(client.getMsgToSend().getNodeInfo());
+            client.customLoger(client.getMsgToSend().getNodeInfo());
 
             long time = System.currentTimeMillis() - start;
             double ms = (double) (time / 1000);
             String message =
                     String.format("Test test_send_node time: %4.6f(sec.) %d(ms)", ms, time);
-            log.info(message);
+            client.customLoger(message);
         } else {
             String temp = String.format("Error code:%d (%s)\n", status, client.getErrMessage());
-            log.info(temp);
+            log.error(temp);
         }
         // client.exitSession();
     }
@@ -74,12 +73,12 @@ public class ApplicationTest {
         Client client = new Client(SERVER_HOST, SERVER_PORT);
 
         long start = System.currentTimeMillis();
-        int status = client.sendNode(1, 0x1000, 1.0000000002, Classif.CODE_SINGLE_START_SYNC);
-        if (status == Classif.OK) {
+        int status = client.sendNode(1, 0x1000, 1.0000000002, CommandCode.CODE_SINGLE_START_SYNC);
+        if (status == ErrorCode.OK) {
             log.info(client.getMsgToSend().getNodeInfo());
         } else {
             String temp = String.format("Error code:%d (%s)\n", status, client.getErrMessage());
-            log.info(temp);
+            log.error(temp);
         }
         long time = System.currentTimeMillis() - start;
         String message = String.format("Test test_send_node time: %d(ms)", time);
@@ -110,6 +109,7 @@ public class ApplicationTest {
     /**
      * Метод для проведения теста на создание узлов и объектов в цикле с записью значения Результат
      * сохраняется в классе msgToSend метод getNodeInfo выводит информацию в удобном виде
+     *
      * @param nodes количество узлов
      * @param objects количество объектов
      */
@@ -122,8 +122,8 @@ public class ApplicationTest {
         for (int i = 1; i <= nodes; i++) {
             for (int j = 1; j <= objects; j++) {
                 value = client.getMsgToSend().setValueRandom();
-                status = client.sendNode(i, 0x1000 + j, value, Classif.CODE_SINGLE_START);
-                if (status != Classif.OK) {
+                status = client.sendNode(i, 0x1000 + j, value, CommandCode.CODE_SINGLE_START);
+                if (status != ErrorCode.OK) {
                     temp =
                             String.format(
                                     "Test canceled. Error code:%d (%s)\n",
@@ -143,6 +143,7 @@ public class ApplicationTest {
      * Метод для проведения теста на синхронное создание узлов и объектов в цикле с записью значения
      * Результат сохраняется в классе msgToSend метод getNodeInfo выводит информацию в удобном виде
      * В режиме синхронной записи значений, клиент ожидает реакции FB Beremiz
+     *
      * @param nodes количество узлов
      * @param objects количество объектов
      */
@@ -155,8 +156,8 @@ public class ApplicationTest {
         for (int i = 1; i <= nodes; i++) {
             for (int j = 1; j <= objects; j++) {
                 value = client.getMsgToSend().setValueRandom();
-                status = client.sendNode(i, 0x1000 + j, value, Classif.CODE_SINGLE_START_SYNC);
-                if (status != Classif.OK) {
+                status = client.sendNode(i, 0x1000 + j, value, CommandCode.CODE_SINGLE_START_SYNC);
+                if (status != ErrorCode.OK) {
                     temp =
                             String.format(
                                     "Test canceled. Error code:%d (%s)\n",
@@ -191,6 +192,7 @@ public class ApplicationTest {
     /**
      * Тест на поиск узла в синхронном режиме, т.е. ожидаем появления данных от Алгоритма Результат
      * сохраняется в классе msgToSend метод getNodeInfo выводит информацию в удобном виде
+     *
      * @throws InterruptedException ошибка по прерыванию
      */
     @Test
@@ -213,7 +215,7 @@ public class ApplicationTest {
      * этот тест м.б. длительным то уровень отладочных сообщений сведен до WARNING:
      * client.debug=PLCGlobals.WARNING;
      */
-    //@Test
+    @Test
     public void perfomanceInitNode() {
         Client client = new Client(SERVER_HOST, SERVER_PORT);
         int nodes = 10;
@@ -236,13 +238,13 @@ public class ApplicationTest {
      * иттерация это изменение аргумента sin(), на 1 градус. Для ускорения вывод отладочных
      * сообщений установлен на уровне WARNING
      *
-     * @param id_Node: идентификатор узла
-     * @param id_Obj: идентификатор объекта
-     * @param n_itteration: кол-во иттераций синхронной передачи данных на сервер
+     * @param idNode: идентификатор узла
+     * @param idObj: идентификатор объекта
+     * @param nItteration: кол-во иттераций синхронной передачи данных на сервер
      */
-    public static void testSendNode(int id_Node, int id_Obj, int n_itteration) {
+    public static void testSendNode(int idNode, int idObj, int nItteration) {
         Client client = new Client(SERVER_HOST, SERVER_PORT);
-        double d_value;
+        double dValue;
         double radian;
         String errMessage;
 
@@ -250,14 +252,14 @@ public class ApplicationTest {
         errMessage =
                 String.format(
                         "Starting test test_send_node for Node: %d/%d, %d-itteration",
-                        id_Node, id_Obj, n_itteration);
+                        idNode, idObj, nItteration);
         log.info(errMessage);
 
-        for (int i = 0, grad = 0; i <= n_itteration; i++, grad++) {
+        for (int i = 0, grad = 0; i <= nItteration; i++, grad++) {
             if (grad > 360) grad = 0;
             radian = Math.toRadians(grad);
-            d_value = Math.sin(radian);
-            client.sendNode(id_Node, id_Obj, d_value, Classif.CODE_SINGLE_START);
+            dValue = Math.sin(radian);
+            client.sendNode(idNode, idObj, dValue, CommandCode.CODE_SINGLE_START);
         }
         client.exitSession();
         long time = System.currentTimeMillis() - start;
@@ -271,60 +273,60 @@ public class ApplicationTest {
      * кол-во иттераций. Посылаемое технологическое значение является функцией sin от угла в
      * диапазоне от 0-360 градусов. Одна иттерация это изменение аргумента sin(), на 1 градус.
      * Предусмотрено использование отладка работы алгоритмов для этого опрашивается соседний узел
-     * (id_Node+1) в котором должно записываться рассчитанное алгоритмом значение. Параметр для
+     * (idNode+1) в котором должно записываться рассчитанное алгоритмом значение. Параметр для
      * синхронизации с алгоритмом timeout, предназначен для задержки повторного имитационного
      * сигнала. Для ускорения вывод отладочных сообщений установлен на уровне WARNING
      *
      * <p>То же что и test_send_node, но выводит результат в файл ./*.xls
      *
-     * @param id_Node идентификатор узла
-     * @param id_Obj идентификатор объекта
-     * @param n_itteration кол-во иттераций синхронной передачи данных на сервер
-     * @param name_sheet наименования листа рабочей книги
-     * @param i_command код команды
+     * @param idNode идентификатор узла
+     * @param idObj идентификатор объекта
+     * @param nItteration кол-во иттераций синхронной передачи данных на сервер
+     * @param nameSheet наименования листа рабочей книги
+     * @param iCommand код команды
      * @param timeout интервал для синхронизации в мс
      * @throws InterruptedException исключение прерывания
      */
     public static void TestSendNode(
-            int id_Node,
-            int id_Obj,
-            int n_itteration,
-            String name_sheet,
-            int i_command,
+            int idNode,
+            int idObj,
+            int nItteration,
+            String nameSheet,
+            int iCommand,
             long timeout)
             throws InterruptedException {
         Client client = new Client(SERVER_HOST, SERVER_PORT);
-        ReportExcel reportExcel = new ReportExcel(name_sheet);
+        ReportExcel reportExcel = new ReportExcel(nameSheet);
 
-        double d_value, d_value_src;
+        double dValue, dValueSrc;
         double radian;
         String errMessage;
-        int i_status;
+        int iStatus;
 
         long start = System.currentTimeMillis();
         errMessage =
                 String.format(
                         "Starting test TestSendNode for Node: %d/%d, %d-itteration",
-                        id_Node, id_Obj, n_itteration);
+                        idNode, idObj, nItteration);
         log.info(errMessage);
-        for (int i = 0, grad = 0; i <= n_itteration; i++, grad++) {
+        for (int i = 0, grad = 0; i <= nItteration; i++, grad++) {
             if (grad > 360) grad = 0;
             radian = Math.toRadians(grad);
-            d_value_src = Math.sin(radian);
-            i_status = client.sendNode(id_Node, id_Obj, d_value_src, i_command);
-            if (i_status != Classif.OK) {
+            dValueSrc = Math.sin(radian);
+            iStatus = client.sendNode(idNode, idObj, dValueSrc, iCommand);
+            if (iStatus != ErrorCode.OK) {
                 Thread.sleep(20);
                 break;
             } else {
                 Thread.sleep(40);
-                d_value_src = client.getMsgToSend().getValue();
-                i_status = client.findNodeObjSync(id_Node + 1, id_Obj);
-                d_value = client.getMsgToSend().getValue();
-                if (i_status != Classif.OK) {
+                dValueSrc = client.getMsgToSend().getValue();
+                iStatus = client.findNodeObjSync(idNode + 1, idObj);
+                dValue = client.getMsgToSend().getValue();
+                if (iStatus != ErrorCode.OK) {
                     Thread.sleep(20);
                     break;
                 } else {
-                    DataSignal dataSignal = new DataSignal(id_Node, id_Obj, d_value, d_value_src);
+                    DataSignal dataSignal = new DataSignal(idNode, idObj, dValue, dValueSrc);
                     reportExcel.list.add(dataSignal);
                 }
             }
@@ -332,9 +334,14 @@ public class ApplicationTest {
         }
         long time = System.currentTimeMillis() - start;
         errMessage = String.format("Test TestSendNode time: %d(ms)", time);
-        reportExcel.CreateReport();
+        iStatus=reportExcel.CreateReport();
         log.info(errMessage);
-        log.info(reportExcel.errMessage);
+        if (iStatus==reportExcel.OK)
+            log.info(reportExcel.errMessage);
+        else if (iStatus==reportExcel.EMPTY)
+            log.warn(reportExcel.errMessage);
+        else
+            log.error(reportExcel.errMessage);
     }
 
     /**
@@ -371,10 +378,10 @@ public class ApplicationTest {
                         nodeId, objectId, iterations);
         log.info(errMessage);
         int status = client.sendNode(nodeId, objectId, value, command);
-        if (status == Classif.OK) {
+        if (status == ErrorCode.OK) {
             for (int i = 0; i <= iterations; i++) {
                 status = client.findNodeObjSync(nodeId, objectId);
-                if (status != Classif.OK) break;
+                if (status != ErrorCode.OK) break;
                 value1 = client.getMsgToSend().getValue();
                 DataSignal dataSignal = new DataSignal(nodeId, objectId, value, value1);
                 value = value1;
@@ -398,7 +405,7 @@ public class ApplicationTest {
     @Test
     public void debugSendNodeValue() throws InterruptedException {
         long t = 50;
-        TestSendNode(1, 0x1000, 400, "values", Classif.CODE_SINGLE_START, t);
+        TestSendNode(1, 0x1000, 400, "values", CommandCode.CODE_SINGLE_START, t);
     }
 
     /**
@@ -409,7 +416,7 @@ public class ApplicationTest {
      */
     @Test
     public void perfomanceSendNodeValue() throws InterruptedException {
-        TestSendNode(1, 0x1000, 100, "values", Classif.CODE_SINGLE_START, 0);
+        TestSendNode(1, 0x1000, 1000, "values", CommandCode.CODE_SINGLE_START, 0);
     }
 
     /**
@@ -421,8 +428,8 @@ public class ApplicationTest {
      */
     @Test
     public void perfomanceSendNodeValueSync() throws InterruptedException {
-        TestSendNode(1, 0x1000, 1000, "ValuesSinc", Classif.CODE_SINGLE_START_SYNC, 0);
-        //        TestSendNode_1(1, 0x1000,10000,"ValuesSinc",classif.CODE_LOAD_FOR_ALGORITM,0);
+        TestSendNode(1, 0x1000, 1000, "ValuesSync", CommandCode.CODE_SINGLE_START_SYNC, 0);
+        //        TestSendNode_1(1, 0x1000,10000,"ValuesSync",classif.CODE_LOAD_FOR_ALGORITM,0);
     }
 
     /**
@@ -433,13 +440,13 @@ public class ApplicationTest {
     public void perfomanceSendNodeValueMulti() {
         try {
             ThreadTest testThread1 = new ThreadTest("Test1");
-            testThread1.setId_Node(1);
+            testThread1.setIdNode(1);
             ThreadTest testThread2 = new ThreadTest("Test2");
-            testThread2.setId_Node(2);
+            testThread2.setIdNode(2);
             ThreadTest testThread3 = new ThreadTest("Test3");
-            testThread3.setId_Node(3);
+            testThread3.setIdNode(3);
             ThreadTest testThread4 = new ThreadTest("Test4");
-            testThread4.setId_Node(4);
+            testThread4.setIdNode(4);
             testThread1.start();
             testThread2.start();
             testThread3.start();

@@ -16,7 +16,8 @@ import ru.dvorobiev.model.DataSignalDAO;
 
 /** класс для вывода информации в Excel */
 public class ReportExcel {
-    public HSSFWorkbook workbook; // объект рабочей книги
+    /** объект рабочей книги */
+    public HSSFWorkbook workbook;
 
     public HSSFSheet sheet;
     public List<DataSignal> list;
@@ -24,6 +25,7 @@ public class ReportExcel {
     public String errMessage;
     /** Путь с именем файла данных по умолчанию ./(name_sheet).xls */
     public String path;
+
     public static final int OK = 0;
     public static final int ERR = -1;
     public static final int EMPTY = -2;
@@ -48,6 +50,7 @@ public class ReportExcel {
     /**
      * Метод формирует отчет в Excel
      *
+     * @throws : IOException
      * @return : OK, ERR - в случае исключения, EMPTY - нет данных
      */
     public int CreateReport() {
@@ -118,7 +121,7 @@ public class ReportExcel {
     }
 
     /**
-     * Задаем необходимый стилб для работы в документе
+     * Задаем необходимый стиль для работы в документе
      *
      * @param workbook: путь и имя файла с выгрухкой данных
      * @return style: вохвращем объект стиля документа

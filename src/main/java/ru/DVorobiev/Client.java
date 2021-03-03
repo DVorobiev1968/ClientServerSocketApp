@@ -5,12 +5,14 @@ import java.net.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-/** Клиент для передачи сообщений по сокету. */
+/** Клиент для передачи сообщений по сокету */
 @Getter
 @Slf4j
 public class Client {
     /** максимальый размер буфера для считывания данных */
     public static final int MAX_BUF = 100;
+    /** тип данных по умолчанию double */
+    public static final int DATA_TYPE_DEFAULT = 3;
 
     /** Имя host сервера */
     private final String serverHost;
@@ -34,6 +36,7 @@ public class Client {
      * данных для сетевого взаимодействия serverPort: номер порта для коннекта с сервером по
      * умолчанию 8889 host: имя host сервера по умолчанию localhost debug: уровень вывода отладочных
      * сообщений (INFO=1, WARNING=2, ERROR=3) по умолчанию 0, вывод всех сообщений
+     *
      * @param serverHost host сервера
      * @param serverPort порт сервера
      */
@@ -42,16 +45,25 @@ public class Client {
         this.serverPort = serverPort;
         this.serverHost = serverHost;
     }
+    /**
+     * метод для фильтрации сообщений logger, в зависимости от log4j.rootLogger=...
+     * INFO, WARN, ERROR
+     *
+     * @param errMessage сообщение для logger
+    */
+    public static void customLoger(String errMessage){
+        if (log.isDebugEnabled())
+            log.debug(errMessage);
+    }
 
     /** метод для завершения работы сервера */
     public void exitServer() {
-        sendCommand(
-                Classif.CODE_EXIT_SERVER); // это костыль надо разобраться в причине, потом убрать
+        sendCommand(CommandCode.CODE_EXIT_SERVER); // это костыль надо разобраться в причине, потом убрать
     }
 
     /** метод для завершения сеанса работы клиента */
     public void exitSession() {
-        sendCommand(Classif.CODE_EXIT);
+        sendCommand(CommandCode.CODE_EXIT);
     }
 
     /**
@@ -65,8 +77,7 @@ public class Client {
         msgToSend.setNodeId(nodeId);
         msgToSend.setObjectId(objectId);
         msgToSend.refreshMessage(); // сфоруем телеграмму на посылку данных
-        int status = sendCommand(Classif.CODE_FIND_NODES);
-        return status;
+        return sendCommand(CommandCode.CODE_FIND_NODES);
     }
 
     /**
@@ -86,10 +97,10 @@ public class Client {
         int status;
         int answerCode;
         do {
-            status = sendCommand(Classif.CODE_FIND_NODES_SYNC);
+            status = sendCommand(CommandCode.CODE_FIND_NODES_SYNC);
             answerCode = msgToSend.getAnswerCode();
             Thread.sleep(20);
-        } while (answerCode == Classif.SET_ALGORITM_WAIT);
+        } while (answerCode == ErrorCode.SET_ALGORITM_WAIT);
 
         return status;
     }
@@ -99,7 +110,7 @@ public class Client {
      * на сервере
      */
     public void listNodes() {
-        sendCommand(Classif.CODE_LIST_NODES);
+        sendCommand(CommandCode.CODE_LIST_NODES);
     }
 
     /**
@@ -114,10 +125,9 @@ public class Client {
         msgToSend.setNodeId(nodeId);
         msgToSend.setObjectId(objectId);
         msgToSend.setValue(value);
-        msgToSend.setDataType(3); // TODO: создать константу для магического числа
+        msgToSend.setDataType(DATA_TYPE_DEFAULT);
         msgToSend.refreshMessage(); // сфоруем телеграмму на посылку данных
-        int status = sendCommand(Classif.CODE_SINGLE_START_SYNC);
-        return status;
+        return sendCommand(CommandCode.CODE_SINGLE_START_SYNC);
     }
 
     /**
@@ -135,8 +145,7 @@ public class Client {
         msgToSend.setValue(value);
         msgToSend.setDataType(3);
         msgToSend.refreshMessage(); // сфоруем телеграмму на посылку данных
-        int status = sendCommand(command);
-        return status;
+        return sendCommand(command);
     }
 
     /**
@@ -144,26 +153,26 @@ public class Client {
      * класс msgToSend для формиорвания структуры сообщения 3. посылает на сервер, ждет ответ 4.
      * получает ответ, формирует код ошибки
      *
-     * @param code_command: код команды (описание Classif.java)
+     * @param codeCommand: код команды (описание Classif.java)
      * @return status: код ошибки
      */
-    public int sendCommand(int code_command) {
-        int status = this.openConnect(); // инициируем объекты и устанавливаем связ с хостом
-        if (status != Classif.OK) return status;
-        msgToSend.setCommandCode(code_command);
+    public int sendCommand(int codeCommand) {
+        int status = this.openConnect(); // инициируем объекты и устанавливаем связь с хостом
+        if (status != ErrorCode.OK) return status;
+        msgToSend.setCommandCode(codeCommand);
         msgToSend.refreshMessage(); // сфоруем телеграмму на посылку данных
-        if (code_command == Classif.CODE_EXIT_SERVER) {
+        if (codeCommand == CommandCode.CODE_EXIT_SERVER) {
             status = this.asyncMode(); // используем асинхронную передачу данных
         } else status = this.syncMode(); // используем синхронную передачу данных
-        if (status == Classif.OK
-                || status == Classif.ERR_FUNC
-                || status == Classif.ERR
-                || status == Classif.UNKNOW_HOST
-                || status == Classif.RESET_HOST) {
+        if (status == ErrorCode.OK
+                || status == ErrorCode.ERR_FUNC
+                || status == ErrorCode.ERR
+                || status == ErrorCode.UNKNOW_HOST
+                || status == ErrorCode.RESET_HOST) {
             status = status;
         } else {
-            errMessage = msgToSend.getMessage(); // TODO: getErrMessage?
-            log.info(errMessage);
+            errMessage = msgToSend.getErrMessage();
+            customLoger(errMessage);
         }
         status = this.closeConnect();
         return status;
@@ -183,14 +192,14 @@ public class Client {
         if (nodeCount < 1) nodeCount = NodeMessage.MAX_NODE;
         if (objectCount < 1) objectCount = NodeMessage.MAX_NODE_OBJS;
         int status = this.openConnect(); // инициируем объекты и устанавливаем связ с хостом
-        if (status != Classif.OK) {
+        if (status != ErrorCode.OK) {
             status = this.closeConnect();
             return status;
         }
 
         for (int nodeId = 1; nodeId <= nodeCount; nodeId++) {
             msgToSend.setNodeId(nodeId);
-            msgToSend.setCommandCode(Classif.CODE_START);
+            msgToSend.setCommandCode(CommandCode.CODE_START);
             for (int objectId = 1; objectId <= objectCount; objectId++) {
                 msgToSend.setObjectId(0x1000 + objectId);
                 msgToSend.setSubObjectId(0x1);
@@ -198,20 +207,20 @@ public class Client {
                 msgToSend.setDataType(3);
                 // тест на прекращение обмена информацией
                 if (objectId > objectCount - 1 && nodeId > nodeCount - 1) {
-                    msgToSend.setCommandCode(Classif.CODE_EXIT);
+                    msgToSend.setCommandCode(CommandCode.CODE_EXIT);
                 }
                 msgToSend.refreshMessage(); // сфоруем телеграмму на посылку данных
 
                 status = this.syncMode(); // используем синхронную передачу данных
-                if (status == Classif.OK
-                        || status == Classif.ERR_FUNC
-                        || status == Classif.ERR
-                        || status == Classif.UNKNOW_HOST
-                        || status == Classif.RESET_HOST) {
+                if (status == ErrorCode.OK
+                        || status == ErrorCode.ERR_FUNC
+                        || status == ErrorCode.ERR
+                        || status == ErrorCode.UNKNOW_HOST
+                        || status == ErrorCode.RESET_HOST) {
                     break;
                 } else {
-                    errMessage = msgToSend.getMessage(); // TODO: getErrMessage?
-                    log.info(errMessage);
+                    errMessage = msgToSend.getErrMessage();
+                    customLoger(errMessage);
                 }
             }
         }
@@ -225,25 +234,25 @@ public class Client {
      * @return i_status: код ошибки
      */
     public int openConnect() {
-        int status = Classif.OK;
+        int status = ErrorCode.OK;
         try {
             InetAddress host = InetAddress.getByName(this.getServerHost());
             errMessage = "Connecting to server on port " + this.serverPort;
-            log.info(log.toString());
-            log.info(errMessage);
+            customLoger(log.toString());
+            customLoger(errMessage);
 
             this.socket = new Socket(host, serverPort);
             errMessage = "Just connected to " + socket.getRemoteSocketAddress();
             this.toServer = new PrintWriter(socket.getOutputStream(), true);
             this.fromServer = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         } catch (UnknownHostException ex) {
-            msgToSend.statusCode = Classif.UNKNOW_HOST;
+            msgToSend.statusCode = ErrorCode.UNKNOW_HOST;
             msgToSend.errMessage = Classif.errMessage(msgToSend.statusCode);
             errMessage = msgToSend.errMessage;
             log.error(errMessage);
             status = msgToSend.statusCode;
         } catch (IOException e) {
-            msgToSend.statusCode = Classif.RESET_HOST;
+            msgToSend.statusCode = ErrorCode.RESET_HOST;
             msgToSend.errMessage = e.getMessage();
             errMessage = msgToSend.errMessage;
             log.error(errMessage);
@@ -258,7 +267,7 @@ public class Client {
      * @return status: код ошибки
      */
     public int closeConnect() {
-        int status = Classif.OK;
+        int status = ErrorCode.OK;
         try {
             this.toServer.close();
             this.fromServer.close();
@@ -266,7 +275,7 @@ public class Client {
         } catch (IOException e) {
             msgToSend.errMessage = e.getMessage();
             log.error(errMessage);
-            status = Classif.ERR_CLOSE_CONNECT;
+            status = ErrorCode.ERR_CLOSE_CONNECT;
         }
         return status;
     }
@@ -281,35 +290,35 @@ public class Client {
     public int syncMode() {
         String line;
         char[] chars = new char[MAX_BUF];
-        int status = Classif.OK;
-        int len_buf;
+        int status;
+        int lenBuf;
 
         try {
             this.toServer.println(msgToSend.getMessage()); // отправил в порт
-            len_buf = fromServer.read(chars, 0, MAX_BUF); // получим ответ
-            if (len_buf > 0) {
-                line = new String(chars, 0, len_buf);
+            lenBuf = fromServer.read(chars, 0, MAX_BUF); // получим ответ
+            if (lenBuf > 0) {
+                line = new String(chars, 0, lenBuf);
                 status = msgToSend.parser(line); // разберем строку по переменным NodeStructure
-            } else status = Classif.READ_SOCKET_FAIL;
-            if (status == Classif.ERR_FUNC
-                    || status == Classif.READ_SOCKET_FAIL) { // отработка ошибки
+            } else status = ErrorCode.READ_SOCKET_FAIL;
+            if (status == ErrorCode.ERR_FUNC
+                    || status == ErrorCode.READ_SOCKET_FAIL) { // отработка ошибки
                 errMessage = Classif.errMessage(status);
                 log.error(errMessage);
                 return status;
             }
-            if (msgToSend.getAnswerCode() == Classif.ERR) {
-                status = Classif.ERR;
+            if (msgToSend.getAnswerCode() == ErrorCode.ERR) {
+                status = ErrorCode.ERR;
                 errMessage = Classif.errMessage(status);
                 log.error(errMessage);
                 return status;
             }
         } catch (UnknownHostException ex) {
-            msgToSend.statusCode = Classif.UNKNOW_HOST;
+            msgToSend.statusCode = ErrorCode.UNKNOW_HOST;
             msgToSend.errMessage = Classif.errMessage(msgToSend.statusCode);
             log.error(errMessage);
             status = msgToSend.statusCode;
         } catch (IOException e) {
-            msgToSend.statusCode = Classif.RESET_HOST;
+            msgToSend.statusCode = ErrorCode.RESET_HOST;
             msgToSend.errMessage = e.getMessage();
             log.error(errMessage);
             status = msgToSend.statusCode;
@@ -325,7 +334,7 @@ public class Client {
      * @return status:
      */
     public int asyncMode() {
-        int status = Classif.OK;
+        int status = ErrorCode.OK;
         this.toServer.println(msgToSend.getMessage()); // отправил в порт
         return status;
     }
@@ -335,12 +344,12 @@ public class Client {
      * закрывает соединение
      */
     public void run() {
-        int status = 0;
+        int status;
         try {
             String line;
             InetAddress host = InetAddress.getByName(this.getServerHost());
             errMessage = "Connecting to server on port " + this.serverPort;
-            log.info(errMessage);
+            customLoger(errMessage);
 
             this.socket = new Socket(host, serverPort);
             errMessage = "Just connected to " + socket.getRemoteSocketAddress();
@@ -349,7 +358,7 @@ public class Client {
 
             for (int i = 1; i <= NodeMessage.MAX_NODE; i++) {
                 msgToSend.setNodeId(i);
-                msgToSend.setCommandCode(Classif.CODE_START);
+                msgToSend.setCommandCode(CommandCode.CODE_START);
                 for (int j = 1; j <= NodeMessage.MAX_NODE_OBJS; j++) {
                     msgToSend.setObjectId(0x1000 + j);
                     msgToSend.setSubObjectId(0x1);
@@ -357,21 +366,21 @@ public class Client {
                     msgToSend.setDataType(2);
                     // тест на прекращение обмена информацией
                     if (j > NodeMessage.MAX_NODE_OBJS - 1) {
-                        msgToSend.setCommandCode(Classif.CODE_STOP);
+                        msgToSend.setCommandCode(CommandCode.CODE_STOP);
                     }
                     msgToSend.refreshMessage(); // сфоруем телеграмму на посылку данных
 
                     toServer.println(msgToSend.getMessage()); // отправил в порт
                     line = fromServer.readLine(); // получим ответ
                     status = msgToSend.parser(line); // разберем строку по переменным NodeStructure
-                    if (status == Classif.ERR_FUNC) { // отработка ошибки
+                    if (status == ErrorCode.ERR_FUNC) { // отработка ошибки
                         log.error(msgToSend.errMessage);
                         break;
                     }
-                    log.info(line);
-                    // тест на выдачу отшибки ри сервера
-                    if (msgToSend.getAnswerCode() == Classif.ERR) {
-                        log.error(Classif.errMessage(Classif.ERR));
+                    customLoger(line);
+                    // тест на выдачу ошибки от сервера
+                    if (msgToSend.getAnswerCode() == ErrorCode.ERR) {
+                        log.error(Classif.errMessage(ErrorCode.ERR));
                         break;
                     }
                 }
@@ -380,7 +389,7 @@ public class Client {
             fromServer.close();
             socket.close();
         } catch (UnknownHostException ex) {
-            msgToSend.statusCode = Classif.UNKNOW_HOST;
+            msgToSend.statusCode = ErrorCode.UNKNOW_HOST;
             msgToSend.errMessage = Classif.errMessage(msgToSend.statusCode);
         } catch (IOException e) {
             msgToSend.errMessage = e.getMessage();

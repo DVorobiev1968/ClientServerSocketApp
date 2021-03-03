@@ -46,6 +46,7 @@ public class MessagePacked {
 
     /**
      * Строка получаемая из буфера
+     *
      * @return Строка получаемая из буфера
      */
     public String messagePacked() {

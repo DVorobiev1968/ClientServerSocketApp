@@ -34,7 +34,7 @@ public class NodeMessage {
 
     NodeMessage() {
         nodeId = 1;
-        commandCode = Classif.CODE_START;
+        commandCode = CommandCode.CODE_START;
         command = "";
         objectId = 0x0;
         subObjectId = 0x0;
@@ -77,9 +77,9 @@ public class NodeMessage {
             }
             return i;
         } catch (NullPointerException ex) {
-            statusCode = Classif.B_MESSAGE_EMPTY;
+            statusCode = ErrorCode.B_MESSAGE_EMPTY;
             errMessage = Classif.errMessage(statusCode);
-            return Classif.ERR_FUNC;
+            return ErrorCode.ERR_FUNC;
         }
     }
 

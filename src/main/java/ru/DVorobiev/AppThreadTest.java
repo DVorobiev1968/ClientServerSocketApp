@@ -8,15 +8,15 @@ public class AppThreadTest {
         testThread2.start();
         testThread1.setPriority(1);
         testThread2.setPriority(1);
-        int testpriority1 = testThread1.getPriority();
-        int testpriority2 = testThread2.getPriority();
+        int testPriority1 = testThread1.getPriority();
+        int testPriority2 = testThread2.getPriority();
         System.out.println(
                 String.format(
                         "%s: %d\n%s: %d",
                         testThread1.getName(),
-                        testpriority1,
+                        testPriority1,
                         testThread2.getName(),
-                        testpriority2));
+                        testPriority2));
         System.out.println("Thread Running");
     }
 }
