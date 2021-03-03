@@ -1,4 +1,4 @@
-package ru.DVorobiev;
+package ru.dvorobiev;
 
 public class AppThreadTest {
     public static void main(String[] args) {
@@ -10,12 +10,13 @@ public class AppThreadTest {
         testThread2.setPriority(1);
         int testpriority1 = testThread1.getPriority();
         int testpriority2 = testThread2.getPriority();
-        System.out.println(String.format("%s: %d\n%s: %d",
-                testThread1.getName(),
-                testpriority1,
-                testThread2.getName(),
-                testpriority2));
+        System.out.println(
+                String.format(
+                        "%s: %d\n%s: %d",
+                        testThread1.getName(),
+                        testpriority1,
+                        testThread2.getName(),
+                        testpriority2));
         System.out.println("Thread Running");
     }
-
 }

@@ -1,113 +1,103 @@
-package ru.DVorobiev.model;
+package ru.dvorobiev.model;
 
 import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import lombok.Data;
 
+@Data
 public class DataSignal {
     private Date date;
     private long time;
 
-    private int id_Node;
-    private int id_Obj;
-    private Double d_value;
-    private Double d_valueSource;
+    /** Идентификатор узла */
+    private int nodeId;
+    /** Идентификатор объекта */
+    private int objectId;
+    /** Значение от процесса */
+    private Double value;
+    /** */
+    private Double valueSource;
 
     /**
      * Дату присваеваем автоматически
-     * @param id_Node: идентификатор узла
-     * @param id_Obj: идентификатор объекта
-     * @param d_value : значение от процесса
+     *
+     * @param nodeId: идентификатор узла
+     * @param objectId: идентификатор объекта
+     * @param value: значение от процесса
+     * @param valueSource:
      */
-    public DataSignal(int id_Node, int id_Obj, Double d_value, Double d_valueSource) {
-        this.id_Node=id_Node;
-        this.id_Obj=id_Obj;
+    public DataSignal(int nodeId, int objectId, Double value, Double valueSource) {
+        this.nodeId = nodeId;
+        this.objectId = objectId;
         this.date = new Date();
-        this.time=this.date.getTime();
-        this.d_value = d_value;
-        this.d_valueSource=d_valueSource;
-    }
-
-    public int getId_Node() {return id_Node; }
-    public void setId_Node(int id_Node) {this.id_Node = id_Node; }
-    public int getId_Obj() { return id_Obj; }
-    public void setId_Obj(int id_Obj) { this.id_Obj = id_Obj; }
-    public Date getDate() {return date;}
-    public void setDate(Date date) {this.date = date; }
-    public Double getD_value() {return d_value;}
-    public void setD_value(Double d_value) {
-        this.d_value = d_value;
-    }
-    public Double getD_valueSource() {
-        return d_valueSource;
-    }
-    public void setD_valueSource(Double d_valueSource)
-    {
-        this.d_valueSource = d_valueSource;
-    }
-    public long getTime() {return this.time; }
-    public void setTime(long time) {
-        this.time = time;
+        this.time = this.date.getTime();
+        this.value = value;
+        this.valueSource = valueSource;
     }
 
     /**
      * метод который работает по умолчанию, автоматически присваивает текущую дату
+     *
      * @return String: строка дата время с учетом Locale
      */
-    public String getStringDate() {
-        String s_date;
+    public String getDateString() {
+        String dateStr;
         Locale locale = new Locale("ru", "RU");
         DateFormatSymbols dateFormatSymbols = new DateFormatSymbols(locale);
-        dateFormatSymbols.setWeekdays(new String[]{
-                "Не используется",
-                "Понедельник",
-                "Вторник",
-                "Среда",
-                "Четверг",
-                "Пятница",
-                "Суббота",
-                "Воскресенье"
-        });
+        dateFormatSymbols.setWeekdays(
+                new String[] {
+                    "Не используется",
+                    "Понедельник",
+                    "Вторник",
+                    "Среда",
+                    "Четверг",
+                    "Пятница",
+                    "Суббота",
+                    "Воскресенье"
+                });
 
         String pattern = "dd/MM/yyyy HH:mm:ss.SSS";
-        SimpleDateFormat simpleDateFormat =
-                new SimpleDateFormat(pattern, dateFormatSymbols);
-        s_date = simpleDateFormat.format(new Date());
-        return s_date;
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern, dateFormatSymbols);
+        dateStr = simpleDateFormat.format(date);
+        return dateStr;
     }
 
     /**
      * метод который преобразовывает дату и время с учетом Locale
+     *
+     * @param date дата
      * @return String: строка дата время с учетом Locale
      */
-    public String getStringDate(Date date) {
-        String s_date, s_time;
+    public String getDateString(Date date) {
+        String dateStr, timeStr;
         String pattern;
 
         SimpleDateFormat simpleDateFormat;
         Locale locale = new Locale("ru", "RU");
         DateFormatSymbols dateFormatSymbols = new DateFormatSymbols(locale);
-        dateFormatSymbols.setWeekdays(new String[]{
-                "Не используется",
-                "Понедельник",
-                "Вторник",
-                "Среда",
-                "Четверг",
-                "Пятница",
-                "Суббота",
-                "Воскресенье"
-        });
+        dateFormatSymbols.setWeekdays(
+                new String[] {
+                    "Не используется",
+                    "Понедельник",
+                    "Вторник",
+                    "Среда",
+                    "Четверг",
+                    "Пятница",
+                    "Суббота",
+                    "Воскресенье"
+                });
 
         pattern = "dd/MM/yyyy";
         simpleDateFormat = new SimpleDateFormat(pattern, dateFormatSymbols);
-        s_date = simpleDateFormat.format(date);
-        this.setDate(new Date(s_date));
+        dateStr = simpleDateFormat.format(date);
+        this.setDate(new Date(dateStr));
 
         pattern = "dd/MM/yyyy HH:mm:ss.SSS";
         simpleDateFormat = new SimpleDateFormat(pattern, dateFormatSymbols);
-        s_date = simpleDateFormat.format(date);
+        dateStr = simpleDateFormat.format(date);
         this.setTime(date.getTime());
-        return s_date;
+        return dateStr;
     }
 }

@@ -1,425 +1,391 @@
-package ru.DVorobiev;
+package ru.dvorobiev;
 
 import java.io.*;
 import java.net.*;
-import java.util.Formatter;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-/**
- * Базовый класс содержит следующие св-ва:
- * 	public int serverPort: номер порта для коннекта с сервером
- * 	public String host: имя host сервера
- * 	public NodeMessage msgToSend: объект со структрой данных для сетевого взаимодействия
- *	public int errCode: код ошибки
- * 	public String errMessage: описание ошибки
- * 	public int debug: для отладки кода, определяет уровень вывода сообщений 0-4, 0-выводятся все сообщения, 4 - не выводятся
- * 	private PrintWriter toServer: объект для записи сообщений на сервер
- * 	private BufferedReader fromServer: объект для чтения сообщений от сервера
- * 	private Socket socket: объект socket
- */
+/** Клиент для передачи сообщений по сокету. */
+@Getter
+@Slf4j
 public class Client {
-	public int serverPort;			// номер порта для коннекта с сервером
-	public String host;				// имя host сервера
-	public NodeMessage msgToSend;	// объекта со структрой данных для сетевого взаимодействия
-	public int errCode;				// код ошибки
-	public String errMessage;		// описание ошибки
-	public int debug;				// для отладки кода, определяет уровень вывода сообщений 0-4, 0-выводятся все сообщения, 4 - не выводятся
-	private PrintWriter toServer;	// объект для записи сообщений на сервер
-	private BufferedReader fromServer; // объект для чтения сообщений от сервера
-	private Socket socket;					// объект socket
-	public static final int MAX_BUF=100;	// максимальый размер буфера для считывания данных
+    /** максимальый размер буфера для считывания данных */
+    public static final int MAX_BUF = 100;
 
-	/**
-	 * конструктор базового класса инициализация следующих св-в:
-	 * msgToSend: объекта со структрой данных для сетевого взаимодействия
-	 * serverPort: номер порта для коннекта с сервером по умолчанию 8889
-	 * host: имя host сервера по умолчанию localhost
-	 * debug: уровень вывода отладочных сообщений (INFO=1, WARNING=2, ERROR=3)
-	 * по умолчанию 0, вывод всех сообщений
-	 */
-	Client(){
-		msgToSend = new NodeMessage();
-		serverPort = msgToSend.port;
-		host=PLCGlobals.host;
-		debug=PLCGlobals.debug;
-	}
+    /** Имя host сервера */
+    private final String serverHost;
+    /** Номер порта для коннекта с сервером */
+    private final int serverPort;
+    /** Объекта со структрой данных для сетевого взаимодействия */
+    private NodeMessage msgToSend;
+    /** Код ошибки */
+    private int errCode;
+    /** Описание ошибки */
+    private String errMessage;
+    /** Объект для записи сообщений на сервер */
+    private PrintWriter toServer;
+    /** Объект для чтения сообщений от сервера */
+    private BufferedReader fromServer;
+    /** Объект socket */
+    private Socket socket;
 
-	/**
-	 * метод для завершения работы сервера
-	 */
-	public void exitServer() throws IOException {
-		sendCommand(msgToSend.cl.CODE_EXIT_SERVER);
-//		send_command(msgToSend.cl.CODE_EXIT_SERVER); // это костыль надо разобраться в причине, потом убрать
-	}
-	/**
-	 * метод для завершения сеанса работы клиента
-	 */
-	public void exitSession() throws IOException {
-		sendCommand(msgToSend.cl.CODE_EXIT);
-	}
+    /**
+     * конструктор базового класса инициализация следующих св-в: msgToSend: объекта со структрой
+     * данных для сетевого взаимодействия serverPort: номер порта для коннекта с сервером по
+     * умолчанию 8889 host: имя host сервера по умолчанию localhost debug: уровень вывода отладочных
+     * сообщений (INFO=1, WARNING=2, ERROR=3) по умолчанию 0, вывод всех сообщений
+     * @param serverHost host сервера
+     * @param serverPort порт сервера
+     */
+    public Client(String serverHost, int serverPort) {
+        msgToSend = new NodeMessage();
+        this.serverPort = serverPort;
+        this.serverHost = serverHost;
+    }
 
-	/**
-	 * метод для поиска информации по узлу
-	 * @param id_node : номер узла
-	 * @param id_obj : номер объекта
-	 * @return i_status: код ошибки
-	 */
-	public int findNodeObj(int id_node, int id_obj) throws IOException {
-		int i_status;
-		msgToSend.setIIdNode(id_node);
-		msgToSend.setHIdObj(id_obj);
-		msgToSend.setSMessage();			// сфоруем телеграмму на посылку данных
-		i_status= sendCommand(msgToSend.cl.CODE_FIND_NODES);
-		return i_status;
-	}
-	/**
-	 * метод для поиска информации по узлу в синхронном режиме, в случае если узел завязан на алгоритм
-	 * пока сервер не ответит что Алгоритм завершен будем ждать ответа
-	 * @param id_node : номер узла
-	 * @param id_obj : номер объекта
-	 * @return i_status: код ошибки
-	 */
-	public int findNodeObjSync(int id_node, int id_obj) throws IOException, InterruptedException {
-		int i_status;
-		int i_codeAnswer;
-		msgToSend.setIIdNode(id_node);
-		msgToSend.setHIdObj(id_obj);
-		msgToSend.setSMessage();			// сфоруем телеграмму на посылку данных
-		do {
-			i_status=sendCommand(msgToSend.cl.CODE_FIND_NODES_SYNC);
-			i_codeAnswer=msgToSend.getICodeAnswer();
-			Thread.sleep(20);
-		}while (i_codeAnswer==msgToSend.cl.SET_ALGORITM_WAIT);
+    /** метод для завершения работы сервера */
+    public void exitServer() {
+        sendCommand(
+                Classif.CODE_EXIT_SERVER); // это костыль надо разобраться в причине, потом убрать
+    }
 
-		return i_status;
-	}
+    /** метод для завершения сеанса работы клиента */
+    public void exitSession() {
+        sendCommand(Classif.CODE_EXIT);
+    }
 
-	/**
-	 * метод для вывода содержимого хранилища применяется для отладки
-	 * содержимое хранилища выводится на сервере
-	 */
-	public void listNodes() throws IOException {
-		sendCommand(msgToSend.cl.CODE_LIST_NODES);
-	}
+    /**
+     * метод для поиска информации по узлу
+     *
+     * @param nodeId : номер узла
+     * @param objectId : номер объекта
+     * @return status: код ошибки
+     */
+    public int findNodeObject(int nodeId, int objectId) {
+        msgToSend.setNodeId(nodeId);
+        msgToSend.setObjectId(objectId);
+        msgToSend.refreshMessage(); // сфоруем телеграмму на посылку данных
+        int status = sendCommand(Classif.CODE_FIND_NODES);
+        return status;
+    }
 
-	/**
-	 * создание узла, с набором необходимых параметров в синхронном режиме
-	 * @param id_node : номер узла
-	 * @param id_obj : номер объекта в узле
-	 * @param d_value : значение
-	 * @return i_status: код ошибки
-	 */
-	public int sendNodeSync(int id_node, int id_obj, double d_value) throws IOException {
-		int i_status;
-		msgToSend.setIIdNode(id_node);
-		msgToSend.setHIdObj(id_obj);
-		msgToSend.setDValue(d_value);
-		msgToSend.setITypeData(3);
-		msgToSend.setSMessage();			// сфоруем телеграмму на посылку данных
-		i_status= sendCommand(msgToSend.cl.CODE_SINGLE_START_SYNC);
-		return i_status;
-	}
-	/**
-	 * создание узла, с набором необходимых параметров
-	 * @param id_node : номер узла
-	 * @param id_obj : номер объекта в узле
-	 * @param d_value : значение
-	 * @return i_status: код ошибки
-	 */
-	public int sendNode(int id_node, int id_obj, double d_value, int i_command) throws IOException {
-		int i_status;
-		msgToSend.setIIdNode(id_node);
-		msgToSend.setHIdObj(id_obj);
-		msgToSend.setDValue(d_value);
-		msgToSend.setITypeData(3);
-		msgToSend.setSMessage();			// сфоруем телеграмму на посылку данных
-		i_status= sendCommand(i_command);
-		return i_status;
-	}
-	/**
-	 * метод для отправки команды на сервер алгоритм работы:
-	 * 1. открывает соединение
-	 * 2. использует класс msgToSend для формиорвания структуры сообщения
-	 * 3. посылает на сервер, ждет ответ
-	 * 4. получает ответ, формирует код ошибки
-	 * @param code_command: код команды (описание Classif.java)
-	 * @return i_status: код ошибки
-	 */
-	public int sendCommand(int code_command) throws IOException {
-		int i_status;
-		i_status=this.openConnect();		// инициируем объекты и устанавливаем связ с хостом
-		if (i_status!=this.msgToSend.cl.OK)
-			return i_status;
-		msgToSend.setICodeCommand(code_command);
-		msgToSend.setSMessage();	// сфоруем телеграмму на посылку данных
-		if (code_command==msgToSend.cl.CODE_EXIT_SERVER)
-			i_status = this.asyncMode();    // используем асинхронную передачу данных
-		else
-			i_status=this.syncMode();	// используем синхронную передачу данных
-		if (i_status==msgToSend.cl.OK ||
-				i_status==msgToSend.cl.ERR_FUNC ||
-				i_status==msgToSend.cl.ERR ||
-				i_status==msgToSend.cl.UNKNOW_HOST ||
-				i_status==msgToSend.cl.RESET_HOST){
-			i_status=i_status;
-		}
-		else {
-			errMessage=msgToSend.getSMessage();
-			printMessage(errMessage,PLCGlobals.INFO);
-		}
-		i_status=this.closeConnect();
-		return i_status;
-	}
+    /**
+     * метод для поиска информации по узлу в синхронном режиме, в случае если узел завязан на
+     * алгоритм пока сервер не ответит что Алгоритм завершен будем ждать ответа
+     *
+     * @param nodeId : номер узла
+     * @param objectId : номер объекта
+     * @return status: код ошибки
+     * @throws InterruptedException exception
+     */
+    public int findNodeObjSync(int nodeId, int objectId) throws InterruptedException {
+        msgToSend.setNodeId(nodeId);
+        msgToSend.setObjectId(objectId);
+        msgToSend.refreshMessage(); // сфоруем телеграмму на посылку данных
 
-	/**
-	 * метод для инициализауии узлов применяется для отладки
-	 * имитирует создание n_Node узлов по n_Obj объектов в каждом, после
-	 * того как узлы будут сформированы посылает на сервер CODE_EXIT
-	 * и завершает работу клиента методы:
-	 * client.exitSession(), client.closeConnect(); по завершению
-	 * использовать не нужно
-	 * @param n_Node: кол-во создаваемых узлов
-	 * @param n_Obj: кол-во создаваемых объектов в узле
-	 * @return i_status: код ошибки
-	 * @throws IOException:
-	 */
-	public int initNode(int n_Node,int n_Obj) throws IOException {
-		int i_status=this.msgToSend.cl.OK;
-		if (n_Node<1)
-			n_Node=msgToSend.MAX_NODE;
-		if (n_Obj<1)
-			n_Obj=msgToSend.MAX_NODE_OBJS;
-		i_status=this.openConnect();			// инициируем объекты и устанавливаем связ с хостом
-		if (i_status!=this.msgToSend.cl.OK){
-			i_status=this.closeConnect();
-			return i_status;
-		}
+        int status;
+        int answerCode;
+        do {
+            status = sendCommand(Classif.CODE_FIND_NODES_SYNC);
+            answerCode = msgToSend.getAnswerCode();
+            Thread.sleep(20);
+        } while (answerCode == Classif.SET_ALGORITM_WAIT);
 
-		for (int i = 1; i <= n_Node; i++) {
-			msgToSend.setIIdNode(i);
-			msgToSend.setICodeCommand(msgToSend.cl.CODE_START);
-			for (int j = 1; j <= n_Obj; j++) {
-				msgToSend.setHIdObj(0x1000 + j);
-				msgToSend.setHIdSubObj(0x1);
-				msgToSend.setDValueRandom();
-				msgToSend.setITypeData(3);
-				// тест на прекращение обмена информацией
-				if (j > n_Obj - 1 &&
-					i> n_Node-1) {
-					msgToSend.setICodeCommand(msgToSend.cl.CODE_EXIT);
-				}
-				msgToSend.setSMessage();	// сфоруем телеграмму на посылку данных
+        return status;
+    }
 
-				i_status=this.syncMode();	// используем синхронную передачу данных
-				if (i_status==msgToSend.cl.OK ||
-						i_status==msgToSend.cl.ERR_FUNC ||
-						i_status==msgToSend.cl.ERR ||
-						i_status==msgToSend.cl.UNKNOW_HOST ||
-						i_status==msgToSend.cl.RESET_HOST){
-					break;
-				}
-				else {
-					errMessage=msgToSend.getSMessage();
-					printMessage(errMessage,PLCGlobals.INFO);
-				}
+    /**
+     * Метод для вывода содержимого хранилища применяется для отладки содержимое хранилища выводится
+     * на сервере
+     */
+    public void listNodes() {
+        sendCommand(Classif.CODE_LIST_NODES);
+    }
 
-			}
-		}
-		i_status=this.closeConnect();
-		return i_status;
-	}
+    /**
+     * создание узла, с набором необходимых параметров в синхронном режиме
+     *
+     * @param nodeId : номер узла
+     * @param objectId : номер объекта в узле
+     * @param value : значение
+     * @return status: код ошибки
+     */
+    public int sendNodeSync(int nodeId, int objectId, double value) {
+        msgToSend.setNodeId(nodeId);
+        msgToSend.setObjectId(objectId);
+        msgToSend.setValue(value);
+        msgToSend.setDataType(3); // TODO: создать константу для магического числа
+        msgToSend.refreshMessage(); // сфоруем телеграмму на посылку данных
+        int status = sendCommand(Classif.CODE_SINGLE_START_SYNC);
+        return status;
+    }
 
-	/**
-	 * 	метод инициализирует объекты для межсетевого взаимодействия
-	 * 	и устаналивает связь с хостом
-	 * @return i_status: код ошибки
-	 * @throws UnknownHostException:
-	 * @throws IOException:
-	 */
-	public int openConnect() throws UnknownHostException,IOException {
-		int i_status=this.msgToSend.cl.OK;
-		String line;
-		try {
-			InetAddress host = InetAddress.getByName(this.host);
-			errMessage = "Connecting to server on port " + this.serverPort;
-			this.printMessage(errMessage, PLCGlobals.INFO);
+    /**
+     * Создание узла, с набором необходимых параметров
+     *
+     * @param nodeId : номер узла
+     * @param objectId : номер объекта в узле
+     * @param value : значение
+     * @param command код команды
+     * @return status: код ошибки
+     */
+    public int sendNode(int nodeId, int objectId, double value, int command) {
+        msgToSend.setNodeId(nodeId);
+        msgToSend.setObjectId(objectId);
+        msgToSend.setValue(value);
+        msgToSend.setDataType(3);
+        msgToSend.refreshMessage(); // сфоруем телеграмму на посылку данных
+        int status = sendCommand(command);
+        return status;
+    }
 
-			this.socket = new Socket(host, serverPort);
-			errMessage = "Just connected to " + socket.getRemoteSocketAddress();
-			this.toServer = new PrintWriter(socket.getOutputStream(), true);
-			this.fromServer = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		}
-		catch(UnknownHostException ex) {
-			msgToSend.code_status=msgToSend.cl.UNKNOW_HOST;
-			msgToSend.errMessage=msgToSend.cl.errMessage(msgToSend.code_status);
-			errMessage=msgToSend.errMessage;
-			this.printMessage(errMessage,PLCGlobals.ERROR);
-			i_status=msgToSend.code_status;
-		}
-		catch(IOException e){
-			msgToSend.code_status=msgToSend.cl.RESET_HOST;
-			msgToSend.errMessage="Error:"+e.getMessage();
-			errMessage=msgToSend.errMessage;
-			this.printMessage(errMessage,PLCGlobals.ERROR);
-			i_status=msgToSend.code_status;
-		}
-		return i_status;
-	}
+    /**
+     * Метод для отправки команды на сервер алгоритм работы: 1. открывает соединение 2. использует
+     * класс msgToSend для формиорвания структуры сообщения 3. посылает на сервер, ждет ответ 4.
+     * получает ответ, формирует код ошибки
+     *
+     * @param code_command: код команды (описание Classif.java)
+     * @return status: код ошибки
+     */
+    public int sendCommand(int code_command) {
+        int status = this.openConnect(); // инициируем объекты и устанавливаем связ с хостом
+        if (status != Classif.OK) return status;
+        msgToSend.setCommandCode(code_command);
+        msgToSend.refreshMessage(); // сфоруем телеграмму на посылку данных
+        if (code_command == Classif.CODE_EXIT_SERVER) {
+            status = this.asyncMode(); // используем асинхронную передачу данных
+        } else status = this.syncMode(); // используем синхронную передачу данных
+        if (status == Classif.OK
+                || status == Classif.ERR_FUNC
+                || status == Classif.ERR
+                || status == Classif.UNKNOW_HOST
+                || status == Classif.RESET_HOST) {
+            status = status;
+        } else {
+            errMessage = msgToSend.getMessage(); // TODO: getErrMessage?
+            log.info(errMessage);
+        }
+        status = this.closeConnect();
+        return status;
+    }
 
-	/**
-	 * 	метод закрывает активные socket, объекты
-	 * 	для сетевого взаимодействия
-	 * @return i_status: код ошибки
-	 */
-	public int closeConnect() throws IOException {
-		int i_status=this.msgToSend.cl.OK;
-		try {
-			this.toServer.close();
-			this.fromServer.close();
-			this.socket.close();
-		} catch (IOException e) {
-			msgToSend.errMessage="Ошибка:"+e.getMessage();
-			this.printMessage(errMessage,PLCGlobals.ERROR);
-			i_status=this.msgToSend.cl.ERR_CLOSE_CONNECT;
-		}
-		return i_status;
-	}
+    /**
+     * метод для инициализауии узлов применяется для отладки имитирует создание nodeCount узлов по
+     * objectCount объектов в каждом, после того как узлы будут сформированы посылает на сервер
+     * CODE_EXIT и завершает работу клиента методы: client.exitSession(), client.closeConnect(); по
+     * завершению использовать не нужно
+     *
+     * @param nodeCount: кол-во создаваемых узлов
+     * @param objectCount: кол-во создаваемых объектов в узле
+     * @return status: код ошибки
+     */
+    public int initNode(int nodeCount, int objectCount) {
+        if (nodeCount < 1) nodeCount = NodeMessage.MAX_NODE;
+        if (objectCount < 1) objectCount = NodeMessage.MAX_NODE_OBJS;
+        int status = this.openConnect(); // инициируем объекты и устанавливаем связ с хостом
+        if (status != Classif.OK) {
+            status = this.closeConnect();
+            return status;
+        }
 
-	/**
-	 функция синхронной работы с сервером по следующему алгоритму:
-	 1. направляем сообщение на сервер в формате msgToSend getS_message()
-	 2. ожидаем ответ, обработка ответной телеграммы
-	 3. передача управления клиенту, возврат кода ошибки
-	 * @return i_status: код ошибки
-	 * @throws UnknownHostException:
-	 * @throws IOException:
-	 */
-	public int syncMode() throws UnknownHostException, IOException {
-		String line;
-		char[]chars=new char[MAX_BUF];
-		int i_status=this.msgToSend.cl.OK;
-		int len_buf;
+        for (int nodeId = 1; nodeId <= nodeCount; nodeId++) {
+            msgToSend.setNodeId(nodeId);
+            msgToSend.setCommandCode(Classif.CODE_START);
+            for (int objectId = 1; objectId <= objectCount; objectId++) {
+                msgToSend.setObjectId(0x1000 + objectId);
+                msgToSend.setSubObjectId(0x1);
+                msgToSend.setValueRandom();
+                msgToSend.setDataType(3);
+                // тест на прекращение обмена информацией
+                if (objectId > objectCount - 1 && nodeId > nodeCount - 1) {
+                    msgToSend.setCommandCode(Classif.CODE_EXIT);
+                }
+                msgToSend.refreshMessage(); // сфоруем телеграмму на посылку данных
 
-		try {
-			this.toServer.println(msgToSend.getSMessage());    // отправил в порт
-			len_buf=fromServer.read(chars, 0, MAX_BUF);      // получим ответ
-			if (len_buf > 0) {
-				line = new String(chars, 0, len_buf);
-				i_status = msgToSend.parser(line);                   // разберем строку по переменным NodeStructure
-			}
-			else
-				i_status=msgToSend.cl.READ_SOCKET_FAIL;
-			if (i_status == msgToSend.cl.ERR_FUNC ||
-					i_status == msgToSend.cl.READ_SOCKET_FAIL) {        		// отработка ошибки
-				errMessage = "Error: " + msgToSend.cl.errMessage(i_status);
-				this.printMessage(errMessage, PLCGlobals.ERROR);
-				return i_status;
-			}
-			if (msgToSend.getICodeAnswer() == msgToSend.cl.ERR) {
-				i_status=msgToSend.cl.ERR;
-				errMessage = "Error: " + msgToSend.cl.errMessage(i_status);
-				this.printMessage(errMessage, PLCGlobals.ERROR);
-				return i_status;
-			}
-		}
-		catch(UnknownHostException ex) {
-			msgToSend.code_status=msgToSend.cl.UNKNOW_HOST;
-			msgToSend.errMessage=msgToSend.cl.errMessage(msgToSend.code_status);
-			this.printMessage(errMessage,PLCGlobals.ERROR);
-			i_status=msgToSend.code_status;
-		}
-		catch(IOException e){
-			msgToSend.code_status=msgToSend.cl.RESET_HOST;
-			msgToSend.errMessage="Ошибка:"+e.getMessage();
-			this.printMessage(errMessage,PLCGlobals.ERROR);
-			i_status=msgToSend.code_status;
-		}
-		finally {
-			this.closeConnect();
-		}
-		return i_status;
-	}
+                status = this.syncMode(); // используем синхронную передачу данных
+                if (status == Classif.OK
+                        || status == Classif.ERR_FUNC
+                        || status == Classif.ERR
+                        || status == Classif.UNKNOW_HOST
+                        || status == Classif.RESET_HOST) {
+                    break;
+                } else {
+                    errMessage = msgToSend.getMessage(); // TODO: getErrMessage?
+                    log.info(errMessage);
+                }
+            }
+        }
+        status = this.closeConnect();
+        return status;
+    }
 
-	/**
-	 * метод ассинхронной отправки сообщений на сервер
-	 * @return i_status:
-	 */
-	public int asyncMode(){
-		int i_status=this.msgToSend.cl.OK;
-		this.toServer.println(msgToSend.getSMessage());    // отправил в порт
-		return i_status;
-	}
+    /**
+     * метод инициализирует объекты для межсетевого взаимодействия и устаналивает связь с хостом
+     *
+     * @return i_status: код ошибки
+     */
+    public int openConnect() {
+        int status = Classif.OK;
+        try {
+            InetAddress host = InetAddress.getByName(this.getServerHost());
+            errMessage = "Connecting to server on port " + this.serverPort;
+            log.info(log.toString());
+            log.info(errMessage);
 
-	/**
-	 * метод выводит ошибки в консоль в зависимост от установленного уровня debug
-	 * @param messageErr: отладочное сообщение для вывода
-	 * @param key : уровень вывода информации от 0 до 4, коррелируется с debug
-	 */
-	public void printMessage(String messageErr, int key){
-		if (this.debug <= key){
-			Formatter f=new Formatter();
-			f.format("%1d : %s",key,messageErr);
-			System.out.println(f);
-		}
-	}
+            this.socket = new Socket(host, serverPort);
+            errMessage = "Just connected to " + socket.getRemoteSocketAddress();
+            this.toServer = new PrintWriter(socket.getOutputStream(), true);
+            this.fromServer = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        } catch (UnknownHostException ex) {
+            msgToSend.statusCode = Classif.UNKNOW_HOST;
+            msgToSend.errMessage = Classif.errMessage(msgToSend.statusCode);
+            errMessage = msgToSend.errMessage;
+            log.error(errMessage);
+            status = msgToSend.statusCode;
+        } catch (IOException e) {
+            msgToSend.statusCode = Classif.RESET_HOST;
+            msgToSend.errMessage = e.getMessage();
+            errMessage = msgToSend.errMessage;
+            log.error(errMessage);
+            status = msgToSend.statusCode;
+        }
+        return status;
+    }
 
-	/**
-	 * метод для отладки имитирует создание 10 узлов по 10 объектов в каждом
-	 * завершает работу, закрывает соединение
-	 */
-	public void run() {
-		int i_status=0;
-		try {
-			String line;
-			InetAddress host = InetAddress.getByName(this.host);
-			errMessage="Connecting to server on port " + this.serverPort;
-			this.printMessage(errMessage,PLCGlobals.INFO);
+    /**
+     * метод закрывает активные socket, объекты для сетевого взаимодействия
+     *
+     * @return status: код ошибки
+     */
+    public int closeConnect() {
+        int status = Classif.OK;
+        try {
+            this.toServer.close();
+            this.fromServer.close();
+            this.socket.close();
+        } catch (IOException e) {
+            msgToSend.errMessage = e.getMessage();
+            log.error(errMessage);
+            status = Classif.ERR_CLOSE_CONNECT;
+        }
+        return status;
+    }
 
-			this.socket = new Socket(host,serverPort);
-			errMessage="Just connected to " + socket.getRemoteSocketAddress();
-			this.toServer = new PrintWriter(socket.getOutputStream(),true);
-			this.fromServer =	new BufferedReader(new InputStreamReader(socket.getInputStream()));
+    /**
+     * функция синхронной работы с сервером по следующему алгоритму: 1. направляем сообщение на
+     * сервер в формате msgToSend getS_message() 2. ожидаем ответ, обработка ответной телеграммы 3.
+     * передача управления клиенту, возврат кода ошибки
+     *
+     * @return status: код ошибки
+     */
+    public int syncMode() {
+        String line;
+        char[] chars = new char[MAX_BUF];
+        int status = Classif.OK;
+        int len_buf;
 
-			for (int i=1; i<=msgToSend.MAX_NODE; i++){
-				msgToSend.setIIdNode(i);
-				msgToSend.setICodeCommand(msgToSend.cl.CODE_START);
-				for (int j=1; j<=msgToSend.MAX_NODE_OBJS;j++){
-					msgToSend.setHIdObj(0x1000+j);
-					msgToSend.setHIdSubObj(0x1);
-					msgToSend.setDValueRandom();
-					msgToSend.setITypeData(2);
-					// тест на прекращение обмена информацией
-					if (j > msgToSend.MAX_NODE_OBJS-1){
-						msgToSend.setICodeCommand(msgToSend.cl.CODE_STOP);
-					}
-					msgToSend.setSMessage();					// сфоруем телеграмму на посылку данных
+        try {
+            this.toServer.println(msgToSend.getMessage()); // отправил в порт
+            len_buf = fromServer.read(chars, 0, MAX_BUF); // получим ответ
+            if (len_buf > 0) {
+                line = new String(chars, 0, len_buf);
+                status = msgToSend.parser(line); // разберем строку по переменным NodeStructure
+            } else status = Classif.READ_SOCKET_FAIL;
+            if (status == Classif.ERR_FUNC
+                    || status == Classif.READ_SOCKET_FAIL) { // отработка ошибки
+                errMessage = Classif.errMessage(status);
+                log.error(errMessage);
+                return status;
+            }
+            if (msgToSend.getAnswerCode() == Classif.ERR) {
+                status = Classif.ERR;
+                errMessage = Classif.errMessage(status);
+                log.error(errMessage);
+                return status;
+            }
+        } catch (UnknownHostException ex) {
+            msgToSend.statusCode = Classif.UNKNOW_HOST;
+            msgToSend.errMessage = Classif.errMessage(msgToSend.statusCode);
+            log.error(errMessage);
+            status = msgToSend.statusCode;
+        } catch (IOException e) {
+            msgToSend.statusCode = Classif.RESET_HOST;
+            msgToSend.errMessage = e.getMessage();
+            log.error(errMessage);
+            status = msgToSend.statusCode;
+        } finally {
+            this.closeConnect();
+        }
+        return status;
+    }
 
-					toServer.println(msgToSend.getSMessage());	// отправил в порт
-					line = fromServer.readLine();				// получим ответ
-					i_status=msgToSend.parser(line);			// разберем строку по переменным NodeStructure
-					if (i_status==msgToSend.cl.ERR_FUNC){		// отработка ошибки
-						System.out.println("Ошибка: " + msgToSend.errMessage);
-						break;
-					}
-					System.out.println(line);
-					// тест на выдачу отшибки ри сервера
-					if (msgToSend.getICodeAnswer()==msgToSend.cl.ERR){
-						System.out.println("Ошибка: " + msgToSend.cl.errMessage(msgToSend.cl.ERR));
-						break;
-					}
-				}
-			}
-			toServer.close();
-			fromServer.close();
-			socket.close();
-		}
-		catch(UnknownHostException ex) {
-			msgToSend.code_status=msgToSend.cl.UNKNOW_HOST;
-			msgToSend.errMessage=msgToSend.cl.errMessage(msgToSend.code_status);
-		}
-		catch(IOException e){
-			msgToSend.errMessage=e.getMessage();
-			System.out.println("Ошибка: " + msgToSend.errMessage);
-			e.printStackTrace();
-		}
-	}
+    /**
+     * Метод ассинхронной отправки сообщений на сервер
+     *
+     * @return status:
+     */
+    public int asyncMode() {
+        int status = Classif.OK;
+        this.toServer.println(msgToSend.getMessage()); // отправил в порт
+        return status;
+    }
+
+    /**
+     * метод для отладки имитирует создание 10 узлов по 10 объектов в каждом завершает работу,
+     * закрывает соединение
+     */
+    public void run() {
+        int status = 0;
+        try {
+            String line;
+            InetAddress host = InetAddress.getByName(this.getServerHost());
+            errMessage = "Connecting to server on port " + this.serverPort;
+            log.info(errMessage);
+
+            this.socket = new Socket(host, serverPort);
+            errMessage = "Just connected to " + socket.getRemoteSocketAddress();
+            this.toServer = new PrintWriter(socket.getOutputStream(), true);
+            this.fromServer = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            for (int i = 1; i <= NodeMessage.MAX_NODE; i++) {
+                msgToSend.setNodeId(i);
+                msgToSend.setCommandCode(Classif.CODE_START);
+                for (int j = 1; j <= NodeMessage.MAX_NODE_OBJS; j++) {
+                    msgToSend.setObjectId(0x1000 + j);
+                    msgToSend.setSubObjectId(0x1);
+                    msgToSend.setValueRandom();
+                    msgToSend.setDataType(2);
+                    // тест на прекращение обмена информацией
+                    if (j > NodeMessage.MAX_NODE_OBJS - 1) {
+                        msgToSend.setCommandCode(Classif.CODE_STOP);
+                    }
+                    msgToSend.refreshMessage(); // сфоруем телеграмму на посылку данных
+
+                    toServer.println(msgToSend.getMessage()); // отправил в порт
+                    line = fromServer.readLine(); // получим ответ
+                    status = msgToSend.parser(line); // разберем строку по переменным NodeStructure
+                    if (status == Classif.ERR_FUNC) { // отработка ошибки
+                        log.error(msgToSend.errMessage);
+                        break;
+                    }
+                    log.info(line);
+                    // тест на выдачу отшибки ри сервера
+                    if (msgToSend.getAnswerCode() == Classif.ERR) {
+                        log.error(Classif.errMessage(Classif.ERR));
+                        break;
+                    }
+                }
+            }
+            toServer.close();
+            fromServer.close();
+            socket.close();
+        } catch (UnknownHostException ex) {
+            msgToSend.statusCode = Classif.UNKNOW_HOST;
+            msgToSend.errMessage = Classif.errMessage(msgToSend.statusCode);
+        } catch (IOException e) {
+            msgToSend.errMessage = e.getMessage();
+            log.error(msgToSend.errMessage);
+            e.printStackTrace();
+        }
+    }
 }

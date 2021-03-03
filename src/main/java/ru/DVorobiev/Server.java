@@ -1,52 +1,53 @@
-package ru.DVorobiev;
+package ru.dvorobiev;
 
 import java.io.*;
 import java.net.*;
 import java.util.Formatter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class Server {
-  public void run() {
-	try {
-	   	MesPacked msgRequest = new MesPacked();
-	   	int serverPort = msgRequest.port;
-	   	Formatter f =new Formatter();  				//объявление объекта для форматирования
-		double d_value =0;
+    public static final int SERVER_PORT = 8889;
 
-		ServerSocket serverSocket = new ServerSocket(serverPort);
-//		serverSocket.setSoTimeout(10000);
+    public void run() {
+        try {
+            MessagePacked messageRequest = new MessagePacked();
+            Formatter formatter = new Formatter(); // объявление объекта для форматирования
+            double value;
 
-		while(true) {
-			System.out.println("Waiting for client on port " + serverSocket.getLocalPort() + "..."); 
+            ServerSocket serverSocket = new ServerSocket(SERVER_PORT);
+            // serverSocket.setSoTimeout(10000);
 
-			Socket server = serverSocket.accept();
-			System.out.println("Just connected to " + server.getRemoteSocketAddress()); 
+            while (true) {
+                log.info("Waiting for client on port " + serverSocket.getLocalPort() + "...");
 
-			PrintWriter toClient = new PrintWriter(server.getOutputStream(),true);
-			BufferedReader fromClient =	new BufferedReader(new InputStreamReader(server.getInputStream()));
-			String s_temp= fromClient.readLine();
-			msgRequest.setSMessage();
-			System.out.println("Server received: " + s_temp);
-			d_value = msgRequest.getDValue();
-			msgRequest.setDValue(d_value++);
-			msgRequest.setICodeAnswer(0);
-			f.format("Node:%d;Code:%d;Value:%3.6f\n",
-						msgRequest.getIIdNode(),
-						msgRequest.getICodeAnswer(),
-						msgRequest.getDValue());
-			msgRequest.setSMessage();
-			toClient.println(msgRequest.getSMessage());
-		}
-	}
-	catch(UnknownHostException ex) {
-		ex.printStackTrace();
-	}
-	catch(IOException e){
-		e.printStackTrace();
-	}
-  }
-	
-  public static void main(String[] args) {
-		Server srv = new Server();
-		srv.run();
-  }
+                Socket server = serverSocket.accept();
+                log.info("Just connected to " + server.getRemoteSocketAddress());
+
+                PrintWriter toClient = new PrintWriter(server.getOutputStream(), true);
+                BufferedReader fromClient =
+                        new BufferedReader(new InputStreamReader(server.getInputStream()));
+                String temp = fromClient.readLine();
+                log.info("Server received: " + temp);
+                value = messageRequest.getValue();
+                messageRequest.setValue(value + 1);
+                messageRequest.setAnswerCode(0);
+                formatter.format(
+                        "Node:%d;Code:%d;Value:%3.6f\n",
+                        messageRequest.getNodeId(),
+                        messageRequest.getAnswerCode(),
+                        messageRequest.getValue());
+                toClient.println(messageRequest.messagePacked());
+            }
+        } catch (UnknownHostException ex) {
+            ex.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        Server srv = new Server();
+        srv.run();
+    }
 }
