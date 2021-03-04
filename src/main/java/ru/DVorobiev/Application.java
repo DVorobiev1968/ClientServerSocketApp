@@ -8,7 +8,7 @@ public class Application {
 
     private static void testSendNode(int idNode, int idObj, int nItteration)
             throws InterruptedException {
-        Client client = new Client(SERVER_HOST, SERVER_PORT);
+        ClientAPI client = new ClientAPI(SERVER_HOST, SERVER_PORT);
         double d_value;
         double radian;
 
@@ -36,13 +36,13 @@ public class Application {
         int idObj = 0x1000 + 7;
 
         //        test_send_node(idNode, id_Obj,1000);
-        Client client = new Client(SERVER_HOST, SERVER_PORT);
-        client.sendNode(idNode,idObj, 111.111, CommandCode.CODE_SINGLE_START);
-//        System.out.print(client.msgToSend.getNodeInfo());
-//        client.initNode(10,10);
-//        client.findNodeObj(idNode,id_Obj);
-//        client.findNodeObj(11,0x1000);
-//        System.out.print(client.msgToSend.getNodeInfo());
+        ClientAPI client = new ClientAPI(SERVER_HOST, SERVER_PORT);
+        client.sendNode(idNode, idObj, 111.111, CommandCode.CODE_SINGLE_START);
+        //        System.out.print(client.msgToSend.getNodeInfo());
+        //        client.initNode(10,10);
+        //        client.findNodeObj(idNode,id_Obj);
+        //        client.findNodeObj(11,0x1000);
+        //        System.out.print(client.msgToSend.getNodeInfo());
         client.listNodes();
         client.exitSession();
         client.exitServer();

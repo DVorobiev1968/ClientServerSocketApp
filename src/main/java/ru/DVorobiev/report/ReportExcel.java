@@ -50,7 +50,6 @@ public class ReportExcel {
     /**
      * Метод формирует отчет в Excel
      *
-     * @throws : IOException
      * @return : OK, ERR - в случае исключения, EMPTY - нет данных
      */
     public int CreateReport() {

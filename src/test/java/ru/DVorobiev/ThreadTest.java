@@ -67,9 +67,11 @@ public class ThreadTest implements Runnable {
     public String getName() {
         return threadTest.getName();
     }
+
     public void setPriority(int i) {
         threadTest.setPriority(i);
     }
+
     public int getPriority() {
         return threadTest.getPriority();
     }

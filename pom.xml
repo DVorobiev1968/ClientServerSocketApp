@@ -23,7 +23,7 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.11</version>
-      <scope>test</scope>
+      <scope>Test</scope>
     </dependency>
     <!-- https://mvnrepository.com/artifact/org.apache.poi/poi -->
     <dependency>
@@ -57,13 +57,12 @@
       <artifactId>slf4j-log4j12</artifactId>
       <version>1.7.30</version>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-simple -->
-    <!--<dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-simple</artifactId>
-      <version>1.7.30</version>
-      <scope>test</scope>
-    </dependency>-->
+    <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-javadoc-plugin -->
+    <dependency>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-javadoc-plugin</artifactId>
+      <version>3.2.0</version>
+    </dependency>
 
   </dependencies>
 
@@ -135,6 +134,43 @@
             </execution>
           </executions>
         </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.2.0</version>
+        <configuration>
+          <source>8</source>
+          <detectJavaApiLink>false</detectJavaApiLink>
+          <author>true</author>
+          <bottom><![CDATA[Copyright 2021, <a href="https://www.rdturbo.ru">TurboPneumatic<a>]]></bottom>
+          <breakiterator>false</breakiterator>
+          <charset>UTF-8</charset>
+          <docencoding>UTF-8</docencoding>
+          <description>Generate with JavaDoc...</description>
+<!--          <outputDirectory>/</outputDirectory>-->
+<!--          <destDir>APIDocs</destDir>-->
+          <doctitle>${project.name} ${project.version} API</doctitle>
+          <encoding>${project.build.sourceEncoding}</encoding>
+          <excludePackageNames>org.junit:org.junit.*</excludePackageNames>
+          <additionalOptions>-Xdoclint:none</additionalOptions>
+          <failOnError>true</failOnError>
+          <failOnWarnings>false</failOnWarnings>
+          <footer>example footer</footer>
+          <groups>
+            <group>
+              <title>Core Packages</title>
+              <packages>ru.dvorobiev</packages>
+            </group>
+          </groups>
+          <header>ClientServerSocketApp documetation</header>
+          <name>ClientServerSocketApp-index.html</name>
+          <show>private</show>
+          <skippedModules></skippedModules>
+          <sourcepath>${project.basedir}/src</sourcepath>
+          <stylesheet>java</stylesheet>
+          <windowtitle>${project.name} ${project.version} API</windowtitle>
+        </configuration>
+      </plugin>
       </plugins>
   </build>
 </project>

@@ -3,7 +3,6 @@ package ru.dvorobiev;
 import java.util.*;
 import lombok.experimental.UtilityClass;
 
-/** TODO: разделить на разные классы коды команд, коды ошибок и т.д. */
 @UtilityClass
 public class Classif {
     private static final HashMap<Integer, String> STATUSES = new HashMap<>();

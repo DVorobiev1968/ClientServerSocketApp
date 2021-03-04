@@ -18,7 +18,7 @@ public class ApplicationTest {
      */
     @Test
     public void perfomanceSendNode() {
-        Client client = new Client(SERVER_HOST, SERVER_PORT);
+        ClientAPI client = new ClientAPI(SERVER_HOST, SERVER_PORT);
 
         long start = System.currentTimeMillis();
         int status = client.sendNode(1, 0x1000, 2.0000000002, CommandCode.CODE_SINGLE_START);
@@ -70,7 +70,7 @@ public class ApplicationTest {
      */
     @Test
     public void perfomanceSendNodeSync() {
-        Client client = new Client(SERVER_HOST, SERVER_PORT);
+        ClientAPI client = new ClientAPI(SERVER_HOST, SERVER_PORT);
 
         long start = System.currentTimeMillis();
         int status = client.sendNode(1, 0x1000, 1.0000000002, CommandCode.CODE_SINGLE_START_SYNC);
@@ -114,7 +114,7 @@ public class ApplicationTest {
      * @param objects количество объектов
      */
     public void sendNodeMulti(int nodes, int objects) {
-        Client client = new Client(SERVER_HOST, SERVER_PORT);
+        ClientAPI client = new ClientAPI(SERVER_HOST, SERVER_PORT);
         double value;
         int status;
         String temp;
@@ -148,7 +148,7 @@ public class ApplicationTest {
      * @param objects количество объектов
      */
     public void sendNodeMultiSync(int nodes, int objects) {
-        Client client = new Client(SERVER_HOST, SERVER_PORT);
+        ClientAPI client = new ClientAPI(SERVER_HOST, SERVER_PORT);
         double value;
         int status;
         String temp;
@@ -178,7 +178,7 @@ public class ApplicationTest {
      */
     @Test
     public void perfomanceFindNodeObj() {
-        Client client = new Client(SERVER_HOST, SERVER_PORT);
+        ClientAPI client = new ClientAPI(SERVER_HOST, SERVER_PORT);
 
         long start = System.currentTimeMillis();
         client.findNodeObject(1, 0x1000);
@@ -197,7 +197,7 @@ public class ApplicationTest {
      */
     @Test
     public void perfomanceFindNodeObjSync() throws InterruptedException {
-        Client client = new Client(SERVER_HOST, SERVER_PORT);
+        ClientAPI client = new ClientAPI(SERVER_HOST, SERVER_PORT);
 
         long start = System.currentTimeMillis();
 
@@ -215,9 +215,9 @@ public class ApplicationTest {
      * этот тест м.б. длительным то уровень отладочных сообщений сведен до WARNING:
      * client.debug=PLCGlobals.WARNING;
      */
-    @Test
+    //    @Test
     public void perfomanceInitNode() {
-        Client client = new Client(SERVER_HOST, SERVER_PORT);
+        ClientAPI client = new ClientAPI(SERVER_HOST, SERVER_PORT);
         int nodes = 10;
         int objs = 10;
 
@@ -243,7 +243,7 @@ public class ApplicationTest {
      * @param nItteration: кол-во иттераций синхронной передачи данных на сервер
      */
     public static void testSendNode(int idNode, int idObj, int nItteration) {
-        Client client = new Client(SERVER_HOST, SERVER_PORT);
+        ClientAPI client = new ClientAPI(SERVER_HOST, SERVER_PORT);
         double dValue;
         double radian;
         String errMessage;
@@ -288,14 +288,9 @@ public class ApplicationTest {
      * @throws InterruptedException исключение прерывания
      */
     public static void TestSendNode(
-            int idNode,
-            int idObj,
-            int nItteration,
-            String nameSheet,
-            int iCommand,
-            long timeout)
+            int idNode, int idObj, int nItteration, String nameSheet, int iCommand, long timeout)
             throws InterruptedException {
-        Client client = new Client(SERVER_HOST, SERVER_PORT);
+        ClientAPI client = new ClientAPI(SERVER_HOST, SERVER_PORT);
         ReportExcel reportExcel = new ReportExcel(nameSheet);
 
         double dValue, dValueSrc;
@@ -334,14 +329,11 @@ public class ApplicationTest {
         }
         long time = System.currentTimeMillis() - start;
         errMessage = String.format("Test TestSendNode time: %d(ms)", time);
-        iStatus=reportExcel.CreateReport();
+        iStatus = reportExcel.CreateReport();
         log.info(errMessage);
-        if (iStatus==reportExcel.OK)
-            log.info(reportExcel.errMessage);
-        else if (iStatus==reportExcel.EMPTY)
-            log.warn(reportExcel.errMessage);
-        else
-            log.error(reportExcel.errMessage);
+        if (iStatus == reportExcel.OK) log.info(reportExcel.errMessage);
+        else if (iStatus == reportExcel.EMPTY) log.warn(reportExcel.errMessage);
+        else log.error(reportExcel.errMessage);
     }
 
     /**
@@ -366,7 +358,7 @@ public class ApplicationTest {
     public static void testSendNode1(
             int nodeId, int objectId, int iterations, String nameSheet, int command, long timeout)
             throws InterruptedException {
-        Client client = new Client(SERVER_HOST, SERVER_PORT);
+        ClientAPI client = new ClientAPI(SERVER_HOST, SERVER_PORT);
         ReportExcel reportExcel = new ReportExcel(nameSheet);
 
         double value = 0.0, value1 = 0.0;
@@ -402,7 +394,7 @@ public class ApplicationTest {
      *
      * @throws InterruptedException исключение по прерыванию
      */
-    @Test
+    //    @Test
     public void debugSendNodeValue() throws InterruptedException {
         long t = 50;
         TestSendNode(1, 0x1000, 400, "values", CommandCode.CODE_SINGLE_START, t);
@@ -416,7 +408,7 @@ public class ApplicationTest {
      */
     @Test
     public void perfomanceSendNodeValue() throws InterruptedException {
-        TestSendNode(1, 0x1000, 1000, "values", CommandCode.CODE_SINGLE_START, 0);
+        TestSendNode(1, 0x1000, 10, "values", CommandCode.CODE_SINGLE_START, 0);
     }
 
     /**
@@ -428,7 +420,7 @@ public class ApplicationTest {
      */
     @Test
     public void perfomanceSendNodeValueSync() throws InterruptedException {
-        TestSendNode(1, 0x1000, 1000, "ValuesSync", CommandCode.CODE_SINGLE_START_SYNC, 0);
+        TestSendNode(1, 0x1000, 10, "ValuesSync", CommandCode.CODE_SINGLE_START_SYNC, 0);
         //        TestSendNode_1(1, 0x1000,10000,"ValuesSync",classif.CODE_LOAD_FOR_ALGORITM,0);
     }
 
@@ -436,7 +428,7 @@ public class ApplicationTest {
      * Тест для проверки производителности работы Сервера, тоже что и perfomanceSendNodeValue, но
      * одновременно с 4 потоками.
      */
-    @Test
+    //    @Test
     public void perfomanceSendNodeValueMulti() {
         try {
             ThreadTest testThread1 = new ThreadTest("Test1");

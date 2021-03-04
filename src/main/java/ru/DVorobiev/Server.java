@@ -5,6 +5,10 @@ import java.net.*;
 import java.util.Formatter;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Тестовое приложение используется только для отладки получаемых сообщений от клиента по завершению
+ * отладки API можно удалить. Использовать как API не предполагается
+ */
 @Slf4j
 public class Server {
     public static final int SERVER_PORT = 8889;

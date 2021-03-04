@@ -5,10 +5,10 @@ import java.net.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-/** Клиент для передачи сообщений по сокету */
+/** базовый класс API, на основании которого строится клиентское приложение */
 @Getter
 @Slf4j
-public class Client {
+public class ClientAPI {
     /** максимальый размер буфера для считывания данных */
     public static final int MAX_BUF = 100;
     /** тип данных по умолчанию double */
@@ -34,31 +34,31 @@ public class Client {
     /**
      * конструктор базового класса инициализация следующих св-в: msgToSend: объекта со структрой
      * данных для сетевого взаимодействия serverPort: номер порта для коннекта с сервером по
-     * умолчанию 8889 host: имя host сервера по умолчанию localhost debug: уровень вывода отладочных
-     * сообщений (INFO=1, WARNING=2, ERROR=3) по умолчанию 0, вывод всех сообщений
+     * умолчанию 8889 host: имя host сервера по умолчанию localhost
      *
      * @param serverHost host сервера
      * @param serverPort порт сервера
      */
-    public Client(String serverHost, int serverPort) {
+    public ClientAPI(String serverHost, int serverPort) {
         msgToSend = new NodeMessage();
         this.serverPort = serverPort;
         this.serverHost = serverHost;
     }
     /**
-     * метод для фильтрации сообщений logger, в зависимости от log4j.rootLogger=...
-     * INFO, WARN, ERROR
+     * метод для фильтрации сообщений logger, в зависимости от log4j.rootLogger=... INFO, WARN,
+     * ERROR
      *
      * @param errMessage сообщение для logger
-    */
-    public static void customLoger(String errMessage){
-        if (log.isDebugEnabled())
-            log.debug(errMessage);
+     */
+    public static void customLoger(String errMessage) {
+        if (log.isDebugEnabled()) log.debug(errMessage);
     }
 
     /** метод для завершения работы сервера */
     public void exitServer() {
-        sendCommand(CommandCode.CODE_EXIT_SERVER); // это костыль надо разобраться в причине, потом убрать
+        sendCommand(
+                CommandCode
+                        .CODE_EXIT_SERVER); // это костыль надо разобраться в причине, потом убрать
     }
 
     /** метод для завершения сеанса работы клиента */
@@ -149,11 +149,13 @@ public class Client {
     }
 
     /**
-     * Метод для отправки команды на сервер алгоритм работы: 1. открывает соединение 2. использует
-     * класс msgToSend для формиорвания структуры сообщения 3. посылает на сервер, ждет ответ 4.
-     * получает ответ, формирует код ошибки
+     * Метод для отправки команды на сервер алгоритм работы: <ol>
+     *   <li>открывает соединение
+     *   <li>использует класс msgToSend для формиорвания структуры сообщения
+     *   <li>посылает на сервер запрос, ждет ответ
+     *   <li>получает ответ, записывает структуры с данными, формирует код ошибки
      *
-     * @param codeCommand: код команды (описание Classif.java)
+     * @param codeCommand: код команды (описание CommandCode.java)
      * @return status: код ошибки
      */
     public int sendCommand(int codeCommand) {
@@ -281,9 +283,10 @@ public class Client {
     }
 
     /**
-     * функция синхронной работы с сервером по следующему алгоритму: 1. направляем сообщение на
-     * сервер в формате msgToSend getS_message() 2. ожидаем ответ, обработка ответной телеграммы 3.
-     * передача управления клиенту, возврат кода ошибки
+     * Функция синхронной работы с сервером по следующему алгоритму:<ol>
+     * <li>направляем сообщение на сервер в формате msgToSend getS_message()
+     * <li>ожидаем ответ, обработка ответной телеграммы
+     * <li>передача управления клиенту, возврат кода ошибки
      *
      * @return status: код ошибки
      */
